@@ -16,6 +16,14 @@ Deliberate decisions here - do NOT silently revert them:
   All three have to agree.
 - `o.mouse = ''` in `home/.config/nvim/lua/vim_config.lua` is set so Herdr can
   leave host mouse capture off and Escape isn't swallowed. It is not an oversight.
+- `homebrew.masApps` is deliberately unused. The activation runs brew bundle via
+  `sudo --user=<user>`, which has no App Store session, so `mas list` returns
+  nothing, every declared App Store app reads as missing, and the reinstall it
+  attempts fails and aborts the whole rebuild. Verified by running the same
+  Brewfile in a normal shell, where the same entry reports `Using Magnet` and
+  succeeds. App Store apps that have a Homebrew cask belong in `casks`; the rest
+  are installed by hand. Note masApps is also exempt from the `zap` cleanup, so
+  it never managed removal either.
 
 Config lives in the repo and is symlinked into place with `mkOutOfStoreSymlink`,
 so files under `home/` are edited here directly and take effect without a rebuild.

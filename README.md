@@ -53,3 +53,7 @@ first and add anything you want to keep.
 
 `gh auth login` still has to be run once per machine. The token is a secret and
 is deliberately not tracked here.
+
+[Magnet](https://apps.apple.com/us/app/magnet/id441258766) is installed by hand
+from the App Store. It has no Homebrew cask, and `homebrew.masApps` cannot be
+used because the activation has no App Store session. See `AGENTS.md`.
