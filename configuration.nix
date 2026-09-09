@@ -42,5 +42,12 @@
       "claude-code"
       "codex"
     ];
+    # App Store apps. nix-darwin supplies `mas` itself, so it needs no brew entry.
+    # Unlike brews and casks these are exempt from the `zap` cleanup above:
+    # removing one here will not uninstall it from the machine.
+    masApps = {
+      Magnet = 441258766;
+      Flycut = 442160987;
+    };
   };
 }
