@@ -55,8 +55,27 @@ in
       };
       cmd_duration.format = "[$duration]($style) ";
     };
-  }; 
-  
+  };
+
+  # Git identity lives here so a fresh Mac gets it from the first switch,
+  # instead of git stopping the first commit to ask for it.
+  programs.git = {
+    enable = true;
+    settings.user = {
+      name = "Abhi Dasari";
+      email = "abi.dasari@gmail.com";
+    };
+  };
+
+  # gitCredentialHelper points git at `gh auth git-credential`, so `git push`
+  # rides on the gh login rather than whatever osxkeychain happens to hold.
+  # `gh auth login` still has to be run once per machine: the token is a
+  # secret and never belongs in this repo.
+  programs.gh = {
+    enable = true;
+    gitCredentialHelper.enable = true;
+  };
+
   # Edit-in-place: the real file stays in my repo, ~/.config just points at it.
   home.file.".config/wezterm".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/wezterm";
