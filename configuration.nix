@@ -80,6 +80,9 @@
       "claude-code"
       "codex"
       "flycut"
+      # Chrome self-updates via Keystone (the cask is auto_updates), so brew
+      # installs it and then leaves the version alone.
+      "google-chrome"
     ];
     # No `masApps` here on purpose. See AGENTS.md: mas cannot reach the App Store
     # session from the activation's sudo context, so brew bundle reads every App
