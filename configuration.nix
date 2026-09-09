@@ -41,13 +41,16 @@
       "wezterm"
       "claude-code"
       "codex"
+      "flycut"
     ];
     # App Store apps. nix-darwin supplies `mas` itself, so it needs no brew entry.
     # Unlike brews and casks these are exempt from the `zap` cleanup above:
     # removing one here will not uninstall it from the machine.
+    #
+    # Magnet is here only because it has no Homebrew cask. Anything that does
+    # belongs in `casks` above, so a fresh Mac needs no App Store sign-in for it.
     masApps = {
       Magnet = 441258766;
-      Flycut = 442160987;
     };
   };
 }
