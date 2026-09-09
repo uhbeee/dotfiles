@@ -21,6 +21,9 @@
       AppleShowAllExtensions = true;
     };
     dock.autohide = true;
+    # Top right hot corner shows the desktop. nix-darwin has no option for the
+    # modifier key; the corner fires with no modifier held, which is the default.
+    dock.wvous-tr-corner = 4;
     finder.FXPreferredViewStyle = "Nlsv";  # list view by default
     finder.CreateDesktop = false;          # clean desktop
     trackpad.Clicking = true;              # tap to click
