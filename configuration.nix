@@ -83,6 +83,10 @@
       # Chrome self-updates via Keystone (the cask is auto_updates), so brew
       # installs it and then leaves the version alone.
       "google-chrome"
+      # Editors. Both casks also put CLIs on PATH: `code` and `code-tunnel`
+      # from VS Code, `subl` from Sublime Text. Both self-update.
+      "visual-studio-code"
+      "sublime-text"
     ];
     # No `masApps` here on purpose. See AGENTS.md: mas cannot reach the App Store
     # session from the activation's sudo context, so brew bundle reads every App
