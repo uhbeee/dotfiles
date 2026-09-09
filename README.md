@@ -7,10 +7,9 @@ command, and a fresh Mac ends up configured the same way every time.
 ## Credit
 
 This started as a follow-along of [Kun Chen](https://github.com/kunchenguid)'s
-[dotfiles](https://github.com/kunchenguid/dotfiles) and the accompanying
-[walkthrough video](https://www.youtube.com/watch?v=iQyg-KypKAA). The structure,
-the `mkOutOfStoreSymlink` edit-in-place approach, and the Neovim config are all
-his. Original is MIT-0.
+[dotfiles](https://github.com/kunchenguid/dotfiles). The structure, the
+`mkOutOfStoreSymlink` edit-in-place approach, and the Neovim config are all his.
+Original is MIT-0.
 
 I'm taking it from here as my own setup, so this will keep drifting from
 upstream. Anything broken in here is mine, not his.
