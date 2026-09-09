@@ -25,6 +25,10 @@
     # no modifier held, which is the default.
     dock.wvous-tr-corner = 4;   # top right: show desktop
     dock.wvous-br-corner = 14;  # bottom right: quick note
+    # Screenshots land in ~/Documents/Screenshots, not on the Desktop.
+    # home.nix creates that directory: macOS silently falls back to the Desktop
+    # if the configured path does not exist.
+    screencapture.location = "/Users/${user}/Documents/Screenshots";
     finder.FXPreferredViewStyle = "Nlsv";  # list view by default
     finder.CreateDesktop = false;          # clean desktop
     trackpad.Clicking = true;              # tap to click
