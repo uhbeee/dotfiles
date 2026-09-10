@@ -43,7 +43,28 @@ else
   echo "    flake.nix already matches \"$REAL_USER\", nothing to do."
 fi
 
-echo "==> Step 4: first darwin-rebuild switch (pinned to nix-darwin-26.05)"
+echo "==> Step 4: git identity (kept out of this repo)"
+# Nothing about a specific person is committed here, so git identity lives in
+# ~/.gitconfig.local, which home.nix tells git to include at runtime.
+if [ -f "$HOME/.gitconfig.local" ]; then
+  echo "    ~/.gitconfig.local already exists, leaving it alone"
+else
+  read -r -p "    Your git name (blank to skip): " GIT_NAME
+  read -r -p "    Your git email (blank to skip): " GIT_EMAIL
+  if [ -n "$GIT_NAME" ] && [ -n "$GIT_EMAIL" ]; then
+    cat > "$HOME/.gitconfig.local" <<EOF
+# Machine-local git identity. Deliberately outside the dotfiles repo.
+[user]
+	name = $GIT_NAME
+	email = $GIT_EMAIL
+EOF
+    echo "    Wrote ~/.gitconfig.local"
+  else
+    echo "    Skipped. Git will ask who you are on your first commit."
+  fi
+fi
+
+echo "==> Step 5: first darwin-rebuild switch (pinned to nix-darwin-26.05)"
 # darwin-rebuild doesn't exist yet on a fresh machine, so run it straight
 # from the flake this once. After this, rebuild.sh works normally.
 # This fetches the darwin-rebuild tool from the nix-darwin-26.05 release branch,

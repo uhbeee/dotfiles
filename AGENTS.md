@@ -18,10 +18,16 @@ When adding anything, ask whether it would be wrong on someone else's machine.
 If so, it is a parameter, not a committed value. This outranks convenience:
 do not hardcode a value merely because there is currently one user.
 
-Known violations still to be removed, tracked as the first step of the
-cross-platform migration: `user` in `flake.nix`, git `name`/`email` in
-`home.nix`, and the absolute `/Users/<name>/` hook path in
-`home/.claude/settings.json`.
+Git identity is handled: `home.nix` sets `programs.git.includes` to
+`~/.gitconfig.local`, so git resolves the identity at runtime and Nix never
+reads it. Do not reintroduce `programs.git.settings.user` here.
+
+One exception remains: `user` in `flake.nix`. Nix needs the username at
+evaluation time, and **flakes only see git-tracked files**, so it cannot come
+from an untracked `local.nix` - that was verified, not assumed, and the file is
+simply absent from the flake's store copy. `bootstrap.sh` rewrites the line to
+match whoever runs it; the cross-platform migration moves it into per-machine
+host files so shared config carries no username.
 
 ## Other deliberate decisions - do NOT silently revert them
 

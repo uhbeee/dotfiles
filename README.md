@@ -21,10 +21,15 @@ machine - it never has to come back here.
 
 Anything tracked here that is specific to one person or one machine is a bug.
 
-> **Current state:** the repo does not fully honour this yet. `flake.nix` still
-> carries a `user` value, `home.nix` a git name and email, and
-> `home/.claude/settings.json` an absolute `/Users/<name>/` path. Removing them
-> is the first step of the cross-platform migration.
+Git identity is not committed: `home.nix` tells git to include
+`~/.gitconfig.local`, which lives outside this repo and which `bootstrap.sh`
+creates. Without it, git simply asks who you are on your first commit.
+
+> **Current state:** one exception remains. `flake.nix` still carries
+> `user = "..."`, because Nix must know the username at evaluation time and
+> flakes cannot read untracked files. `bootstrap.sh` rewrites that line to match
+> whoever runs it, and the cross-platform migration moves it into per-machine
+> host files so shared config carries no username at all.
 
 ## Credit
 

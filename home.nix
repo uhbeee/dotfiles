@@ -58,14 +58,13 @@ in
     };
   };
 
-  # Git identity lives here so a fresh Mac gets it from the first switch,
-  # instead of git stopping the first commit to ask for it.
+  # Git identity is deliberately NOT committed: see the governing principle in
+  # AGENTS.md. It lives in ~/.gitconfig.local, which git includes at runtime and
+  # nix never reads, so this repo stays usable by anyone as-is.
+  # bootstrap.sh creates that file; without it git asks who you are on first commit.
   programs.git = {
     enable = true;
-    settings.user = {
-      name = "Abhi Dasari";
-      email = "abi.dasari@gmail.com";
-    };
+    includes = [ { path = "~/.gitconfig.local"; } ];
   };
 
   # gitCredentialHelper points git at `gh auth git-credential`, so `git push`
