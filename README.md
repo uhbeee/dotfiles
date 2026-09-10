@@ -4,6 +4,28 @@ My Mac setup, managed with [nix-darwin](https://github.com/nix-darwin/nix-darwin
 and [home-manager](https://github.com/nix-community/home-manager). One repo, one
 command, and a fresh Mac ends up configured the same way every time.
 
+## Principle: user and device agnostic
+
+**Nothing about a specific person or a specific machine belongs in this repo.**
+
+Clone it, supply your own details locally, and it configures your machine. No
+forking, no editing tracked files, no pull request needed to use it. If your
+setup diverges from mine later, that divergence is yours and stays on your
+machine - it never has to come back here.
+
+- **Identity** - name, email, username - is supplied at setup time or read from
+  an untracked local file. It is never committed.
+- **Machine specifics** - hostname, CPU architecture, hardware - belong to the
+  host file for that machine, never to shared config.
+- **Secrets** never enter the repo at all.
+
+Anything tracked here that is specific to one person or one machine is a bug.
+
+> **Current state:** the repo does not fully honour this yet. `flake.nix` still
+> carries a `user` value, `home.nix` a git name and email, and
+> `home/.claude/settings.json` an absolute `/Users/<name>/` path. Removing them
+> is the first step of the cross-platform migration.
+
 ## Credit
 
 This started as a follow-along of [Kun Chen](https://github.com/kunchenguid)'s

@@ -3,15 +3,35 @@
 This repo is the single source of truth for a Mac's configuration. `rebuild.sh`
 applies it; `bootstrap.sh` takes a bare machine to that point.
 
-Deliberate decisions here - do NOT silently revert them:
+## Governing principle: user and device agnostic
+
+Nothing about a specific person or a specific machine may be committed to this
+repo. Someone else must be able to clone it untouched, supply their own details
+locally, and configure their own machine - no fork, no edit to a tracked file,
+no pull request.
+
+Identity (name, email, username) is supplied at setup time or read from an
+untracked local file. Machine specifics (hostname, architecture, hardware)
+belong to that machine's host file. Secrets never enter the repo.
+
+When adding anything, ask whether it would be wrong on someone else's machine.
+If so, it is a parameter, not a committed value. This outranks convenience:
+do not hardcode a value merely because there is currently one user.
+
+Known violations still to be removed, tracked as the first step of the
+cross-platform migration: `user` in `flake.nix`, git `name`/`email` in
+`home.nix`, and the absolute `/Users/<name>/` hook path in
+`home/.claude/settings.json`.
+
+## Other deliberate decisions - do NOT silently revert them
 
 - `homebrew.onActivation.cleanup = "zap"` in `configuration.nix` is intentional.
   It forces every Homebrew package to be declared in the Nix config instead of
   installed ad-hoc, which is what keeps the machine reproducible. Do not soften
   it to `uninstall` or `none`.
-- The username is defined once, as `user` in `flake.nix`, and threaded through
-  `configuration.nix` and `home.nix` via `specialArgs`. Do not reintroduce a
-  hardcoded username anywhere else.
+- The username is threaded from a single point via `specialArgs`, never
+  hardcoded in more than one place. Under the governing principle above it
+  should ultimately not be committed at all; until then, one definition only.
 - The host label `"mac"` appears in `flake.nix`, `rebuild.sh` and `bootstrap.sh`.
   All three have to agree.
 - `o.mouse = ''` in `home/.config/nvim/lua/vim_config.lua` is set so Herdr can
