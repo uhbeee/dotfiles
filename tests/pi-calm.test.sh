@@ -17,7 +17,8 @@
 #   degradation with one clear diagnostic;
 # - working ship: geometry, cadence, colors, resize, narrow fallback,
 #   freeze/resume, timer disposal, extension lifecycle;
-# - real Pi 0.82 TUI proofs in tmux without credentials or provider calls.
+# - real TUI proofs in tmux against the repo-pinned Pi, without credentials
+#   or provider calls.
 set -u
 
 # shellcheck source=tests/lib.sh
@@ -25,7 +26,19 @@ set -u
 
 TMP_ROOT=$(dotfiles_test_tmproot pi-calm)
 CALM_DIR="$ROOT/home/.pi/agent/extensions/calm"
-PI_PACKAGE_DIR=${PI_CALM_TEST_PACKAGE_DIR:-"$(npm root -g 2>/dev/null)/@earendil-works/pi-coding-agent"}
+# The Pi package this repository pins: the overlay in flake.nix takes
+# pi-coding-agent from the locked nixpkgs-unstable input, so resolve that exact
+# store path from the flake. Both the TUI executable and the npm-package
+# fixture are checked against it; anything else (an older profile generation, a
+# global npm install) must fail rather than silently stand in for the pin.
+REPO_PI_PACKAGE=$(nix eval --raw --impure --expr \
+  '(builtins.getFlake "'"$ROOT"'").inputs.nixpkgs-unstable.legacyPackages.${builtins.currentSystem}.pi-coding-agent.outPath' \
+  2>/dev/null || true)
+PI_PACKAGE_DIR=${PI_CALM_TEST_PACKAGE_DIR:-${REPO_PI_PACKAGE:+$REPO_PI_PACKAGE/lib/node_modules/pi-monorepo}}
+if [ -n "${PI_CALM_TEST_PACKAGE_DIR:-}" ] && [ -n "$REPO_PI_PACKAGE" ] \
+  && [ "$PI_CALM_TEST_PACKAGE_DIR" != "$REPO_PI_PACKAGE/lib/node_modules/pi-monorepo" ]; then
+  echo "note: PI_CALM_TEST_PACKAGE_DIR overrides the flake-pinned Pi package; results do not attest the repo pin" >&2
+fi
 TMUX_SOCKET="pi-calm-test-$$"
 TMUX_SESSION="pi-calm-e2e"
 
@@ -103,7 +116,7 @@ test_zero_coupling_and_state_file() {
   local pat_watch="fm_""watch_arm_pi" pat_op="FIRSTMATE""_OP" pat_dash="fm-""calm"
 
   # The operational marker and upstream runtime surfaces must not exist anywhere.
-  for file in $source_files "$ROOT/tests/pi-calm.test.sh" "$ROOT/tests/lib.sh" "$ROOT/README.md" "$ROOT/home.nix"; do
+  for file in $source_files "$ROOT/tests/pi-calm.test.sh" "$ROOT/tests/lib.sh" "$ROOT/README.md" "$ROOT/home.nix" "$ROOT/modules/home/common/pi.nix"; do
 
     assert_not_contains "$(cat "$file")" "$pat_fm_home" "$file mentions $pat_fm_home"
     assert_not_contains "$(cat "$file")" "$pat_fm_root" "$file mentions $pat_fm_root"
@@ -115,7 +128,7 @@ test_zero_coupling_and_state_file() {
   done
   # The upstream project name may appear only in a license attribution.
   local attribution_name="First""mate"
-  license_hits=$(grep -rni "$attribution_name" "$CALM_DIR" "$ROOT/README.md" "$ROOT/home.nix" 2>/dev/null | grep -v "Adapted from" || true)
+  license_hits=$(grep -rni "$attribution_name" "$CALM_DIR" "$ROOT/README.md" "$ROOT/home.nix" "$ROOT/modules/home/common/pi.nix" 2>/dev/null | grep -v "Adapted from" || true)
   [ -z "$license_hits" ] || fail "unexpected upstream references outside license attribution: $license_hits"
   grep -q "MIT License" "$CALM_DIR/LICENSE" || fail "calm LICENSE lost the MIT permission text"
   grep -q "Copyright (c) 2026 Kun Chen" "$CALM_DIR/LICENSE" || fail "calm LICENSE lost the copyright notice"
@@ -128,6 +141,7 @@ test_zero_coupling_and_state_file() {
     fail "the Calm state file is tracked in the repository"
   fi
   assert_not_contains "$(cat "$ROOT/home.nix")" '.pi/agent/calm' "home.nix manages the Calm state file"
+  assert_not_contains "$(cat "$ROOT/modules/home/common/pi.nix")" '.pi/agent/calm' "pi.nix manages the Calm state file"
   grep -q '^/home/.pi/agent/calm$' "$ROOT/.gitignore" \
     || fail ".gitignore does not guard /home/.pi/agent/calm"
 
@@ -142,10 +156,10 @@ test_zero_coupling_and_state_file() {
 test_static_typescript_and_repo_wiring() {
   # Home Manager links the extensions directory as a whole, so the calm
   # subdirectory auto-loads without any new declaration.
-  grep -q 'home.file.".pi/agent/extensions".source =' "$ROOT/home.nix" \
-    || fail "home.nix no longer links ~/.pi/agent/extensions as a directory"
-  grep -q "mkOutOfStoreSymlink \"\${dotfiles}/home/.pi/agent/extensions\"" "$ROOT/home.nix" \
-    || fail "home.nix changed the Pi extensions link target"
+  grep -q 'home.file.".pi/agent/extensions".source =' "$ROOT/modules/home/common/pi.nix" \
+    || fail "pi.nix no longer links ~/.pi/agent/extensions as a directory"
+  grep -q "mkOutOfStoreSymlink \"\${dotfiles}/home/.pi/agent/extensions\"" "$ROOT/modules/home/common/pi.nix" \
+    || fail "pi.nix changed the Pi extensions link target"
   [ -f "$CALM_DIR/index.ts" ] || fail "calm extension entry point missing"
   [ -f "$CALM_DIR/LICENSE" ] || fail "calm license file missing"
 
@@ -588,8 +602,20 @@ test_real_pi_tui_smoke() {
     echo "skip: pi or tmux not found for isolated real TUI smoke"
     return 0
   fi
-  [ "$(pi --version 2>/dev/null || true)" = "0.82.0" ] \
-    || fail "real Pi smoke requires the installed Pi 0.82.0 proof target"
+  # The proof target is the Pi this flake pins, resolved from the flake itself
+  # at the top of this file, not a fixed version and not "any nix-installed
+  # Pi": the executable on PATH must resolve into that exact store package, so
+  # a stale profile generation fails here instead of impersonating the pin.
+  [ -n "$REPO_PI_PACKAGE" ] \
+    || fail "could not resolve the flake-pinned Pi package (nix eval failed)"
+  local pi_bin pi_target pi_version
+  pi_bin=$(command -v pi)
+  pi_target=$(readlink -f "$pi_bin" 2>/dev/null || printf '%s' "$pi_bin")
+  case "$pi_target" in
+    "$REPO_PI_PACKAGE"/*) ;;
+    *) fail "real Pi smoke must run the flake-pinned Pi ($REPO_PI_PACKAGE); found $pi_target" ;;
+  esac
+  pi_version=$(pi --version 2>/dev/null || true)
 
   fixture="$TMP_ROOT/tui-smoke"
   agent="$fixture/agent"
@@ -704,7 +730,7 @@ TS
   tmux -L "$socket" send-keys -t "$TMUX_SESSION" Enter
   sleep 0.1
   tmux -L "$socket" kill-server 2>/dev/null || true
-  pass "isolated Pi 0.82 TUI proves auto-load, /calm persistence, resize-safe working animation, and genuine transcript text without credentials"
+  pass "isolated TUI on the repo-pinned Pi ($pi_version) proves auto-load, /calm persistence, resize-safe working animation, and genuine transcript text without credentials"
 }
 
 test_zero_coupling_and_state_file
