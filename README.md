@@ -21,16 +21,6 @@ machine - it never has to come back here.
 
 Anything tracked here that is specific to one person or one machine is a bug.
 
-Git identity is not committed: `home.nix` tells git to include
-`~/.gitconfig.local`, which lives outside this repo and which `bootstrap.sh`
-creates. Without it, git simply asks who you are on your first commit.
-
-> **Current state:** one exception remains. `flake.nix` still carries
-> `user = "..."`, because Nix must know the username at evaluation time and
-> flakes cannot read untracked files. `bootstrap.sh` rewrites that line to match
-> whoever runs it, and the cross-platform migration moves it into per-machine
-> host files so shared config carries no username at all.
-
 ## Credit
 
 This started as a follow-along of [Kun Chen](https://github.com/kunchenguid)'s
@@ -80,7 +70,3 @@ first and add anything you want to keep.
 
 `gh auth login` still has to be run once per machine. The token is a secret and
 is deliberately not tracked here.
-
-[Magnet](https://apps.apple.com/us/app/magnet/id441258766) is installed by hand
-from the App Store. It has no Homebrew cask, and `homebrew.masApps` cannot be
-used because the activation has no App Store session. See `AGENTS.md`.

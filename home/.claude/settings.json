@@ -13,10 +13,11 @@
       }
     ]
   },
-  "theme": "dark",
-  "tui": "fullscreen",
   "statusLine": {
     "type": "command",
     "command": "input=$(cat); model=$(echo \"$input\" | jq -r '.model.display_name'); used=$(echo \"$input\" | jq -r '.context_window.used_percentage // empty'); cwd=$(echo \"$input\" | jq -r '.workspace.current_dir // .cwd'); repo=$(echo \"$input\" | jq -r '.workspace.repo.name // empty'); branch=$(git -C \"$cwd\" --no-optional-locks rev-parse --abbrev-ref HEAD 2>/dev/null); if [ -z \"$repo\" ]; then repo=$(basename \"$(git -C \"$cwd\" --no-optional-locks rev-parse --show-toplevel 2>/dev/null)\"); fi; out=\"$model\"; if [ -n \"$used\" ]; then out=\"$out | Context: $(printf '%.0f' \"$used\")% used\"; fi; if [ -n \"$repo\" ]; then out=\"$out | $repo\"; fi; if [ -n \"$branch\" ]; then out=\"$out ($branch)\"; fi; printf '%s' \"$out\""
-  }
+  },
+  "tui": "fullscreen",
+  "theme": "dark",
+  "model": "claude-fable-5[1m]"
 }

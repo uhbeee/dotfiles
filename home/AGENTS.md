@@ -13,6 +13,8 @@
 - Apply that same high standard to engineering excellence: lint, test failures, and test flakiness.
   If you see one, even if it is not caused by what you are working on right now, still get it fixed.
 - Before using "dynamic workflows", "ultra code" or any harness feature that immediately spawns a large swarm of subagents, always explain the tradeoffs and ask the user for explicit approval.
+- Never do `git commit` or `git push` operations without checking with me first and getting permission.
+- Be as pithy as possible in your responses. Never re-iterate or re-explain or re-say anything already said. ALWAYS err towards being as pithy as possible.
 
 ## Maintaining this file
 
