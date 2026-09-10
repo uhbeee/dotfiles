@@ -49,5 +49,38 @@
           }
         ];
       };
+
+      # Consumer-facing outputs. Additive: the Mac above still builds from its
+      # own wiring; these make the same modules importable by a machines repo
+      # (scaffold one with `nix flake init -t <this-flake>#machine`).
+
+      # The home module tree: shell, editor, CLI, prompt, agents.
+      homeManagerModules.default = ./home.nix;
+
+      # macOS system preferences, self-contained: pulls in nix-homebrew's
+      # module so a consumer imports exactly one thing.
+      darwinModules.default = {
+        imports = [
+          nix-homebrew.darwinModules.nix-homebrew
+          ./modules/system/darwin/defaults.nix
+          ./modules/system/darwin/homebrew.nix
+          # The restart that makes screencapture.location take effect; see the
+          # note in that file for why configuration.nix has its own copy.
+          ./modules/system/darwin/screencapture-restart.nix
+        ];
+      };
+
+      # The pinned-package overlay, so consumers get the same Pi the library
+      # tests against.
+      overlays.default = piOverlay;
+
+      # The package list as data. Removing a package on one machine means
+      # assigning a filtered copy with lib.mkForce; see lib/base-packages.nix.
+      lib.basePackages = import ./lib/base-packages.nix;
+
+      templates.machine = {
+        path = ./templates/machine;
+        description = "A machines repo consuming this library: a flake with the standalone home-manager and darwin compositions, an example machine file, and the install/update/recovery runbook.";
+      };
     };
 }

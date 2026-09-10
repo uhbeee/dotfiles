@@ -23,7 +23,11 @@
   # runs after the defaults are written. killall exits non-zero when nothing
   # matches, which would abort activation, hence the `|| true`. Ordered text:
   # it merges with home-manager's activation hook in module-definition order,
-  # so it stays in this root module to keep its pre-split position.
+  # so it stays in this root module to keep its pre-split position; importing
+  # it moves the text ahead of home-manager's and changes the hash (verified).
+  # modules/system/darwin/screencapture-restart.nix carries the same line for
+  # darwinModules.default consumers; phase 4, when this machine consumes the
+  # export itself, removes this copy.
   system.activationScripts.postActivation.text = ''
     killall -qu ${user} screencaptureui || true
   '';

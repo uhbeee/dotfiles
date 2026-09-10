@@ -62,6 +62,39 @@ For every change after that:
 Most files under `home/` are symlinked back into this repo, so editing them takes
 effect immediately. Only adding a *new* symlink needs a rebuild.
 
+## Consuming it as a library
+
+The flake also exports its modules, so a separate machines repo can consume
+them instead of cloning this one.
+
+**Provisional:** the exports exist and evaluate, but the modules still assume
+this repo's setup (a bespoke `user` argument, a pinned `home.stateVersion`,
+config links through `~/.dotfiles`), so a consumer build does not succeed yet.
+Phases 3-4 of `docs/build-order.md` remove those assumptions and verify the
+build from outside; this notice goes away then. The outputs:
+
+- `homeManagerModules.default` - shell, editor, CLI, prompt, agents
+- `darwinModules.default` - the macOS system preferences, self-contained
+- `overlays.default` - the pinned-package overlay (Pi), so consumers build
+  the same versions this repo tests against
+- `lib.basePackages` - the package list as a function of `pkgs`, so one
+  machine can remove a package with `lib.mkForce` over a filtered copy
+- `templates.machine` - scaffolds that machines repo
+
+Already have a machines repo? Add `dotfiles` as an input with
+`nixpkgs.follows`/`home-manager.follows`, import the module, write the machine
+file. Starting from nothing:
+
+```sh
+mkdir machines && cd machines
+nix flake init -t github:uhbeee/dotfiles#machine
+```
+
+The scaffold ships both target compositions (standalone home-manager, and
+nix-darwin with home-manager inside), an example machine file, and the
+install/update/recovery runbook. The per-machine convention is documented
+there, next to the files it governs.
+
 ## Before you run it
 
 `configuration.nix` sets `homebrew.onActivation.cleanup = "zap"`, which removes

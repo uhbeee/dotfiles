@@ -8,19 +8,10 @@
 
   # home.packages concatenates across modules in import order, so it stays in
   # this root module, after home-manager's own contributions, exactly where the
-  # pre-split file put it. One list, one place.
-  home.packages = with pkgs; [
-    # Userful CLI tools
-    ripgrep   # fast search
-    fd        # fast find
-    fzf       # fuzzy finder
-    jq        # json on the command line
-    lazygit
-    neovim
-    pi-coding-agent  # from the unstable overlay in flake.nix
-    # The font everything renders in
-    nerd-fonts.hack
-  ];
+  # pre-split file put it. The list itself lives in lib/base-packages.nix,
+  # which the flake also exports as `lib.basePackages`: one list, one place,
+  # whether the library installs it or a consumer filters it.
+  home.packages = import ./lib/base-packages.nix pkgs;
   fonts.fontconfig.enable = true;
 
   # initContent is ordered text: pieces concatenate in module-definition order,
