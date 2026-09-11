@@ -1,9 +1,10 @@
-{ user, ... }:
+{ config, ... }:
 
 {
   nix-homebrew = {
     enable = true;
-    inherit user;
+    # The consumer-owned option, not a bespoke argument.
+    user = config.system.primaryUser;
   };
   homebrew = {
     enable = true;

@@ -1,10 +1,9 @@
-{ pkgs, user, ... }:
+{ pkgs, ... }:
 
 {
-  # Identity stays here, at the entry point, not in any module.
-  home.username = user;
-  home.homeDirectory = "/Users/${user}";
-  home.stateVersion = "24.11";
+  # No identity here. This file is the library's exported home module tree:
+  # the consumer owns home.username, home.homeDirectory and home.stateVersion,
+  # and every module below reads config.home.* instead of asking who you are.
 
   # home.packages concatenates across modules in import order, so it stays in
   # this root module, after home-manager's own contributions, exactly where the
@@ -24,12 +23,15 @@
   # One module per concern. An explicit list, no directory scanning: what is
   # enabled is exactly what is written here.
   imports = [
+    ./modules/home/common/options.nix
+    ./modules/home/common/managed-settings.nix
     ./modules/home/common/core.nix
     ./modules/home/common/zsh.nix
     ./modules/home/common/starship.nix
     ./modules/home/common/git.nix
     ./modules/home/common/gh.nix
     ./modules/home/common/neovim.nix
+    ./modules/home/common/lazy-pins.nix
     ./modules/home/common/agents.nix
     ./modules/home/common/pi.nix
     ./modules/home/darwin/wezterm.nix

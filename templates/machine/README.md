@@ -6,14 +6,12 @@ per-machine divergences. The library never learns any of it. Keep this repo
 private if you like; it holds no secrets either way - secrets never go in
 either repo.
 
-> **Provisional.** This scaffold describes the target contract, and the
-> library has not finished migrating to it (its `docs/build-order.md`, phases
-> 3-4). Today the exported modules still require a bespoke `user` argument,
-> pin their own `home.stateVersion`, and link config files through
-> `~/.dotfiles`, so neither composition below builds for a consumer yet, and
-> the `mkDefault`/`dotfiles-local` override mechanisms do not exist yet. This
-> banner is removed when the library's phase 3 lands and these compositions
-> are verified from outside.
+> **Provisional.** The exported modules now honor this contract: identity is
+> yours (`home.username`/`home.homeDirectory`/`stateVersion`), authored config
+> arrives read-only from the nix store, and the override mechanisms below are
+> implemented. What remains before this banner goes: the library's consumer
+> build from a clean committed revision and its disposable-account behavioral
+> run (its `docs/build-order.md`, tasks 3.6-3.7).
 
 ## Layout
 
@@ -121,10 +119,8 @@ readlink /run/current-system   # matches readlink ./result
 
 ## Diverging from the library
 
-*(Target contract; lands with the library's phase 3.)*
-
 - **Simple preferences** ship as `lib.mkDefault`: assign your own value in a
-  module here and it wins.
+  module here and it wins, and the rest of the library's settings stay.
 - **Removing a package**: the library exports its list as data. Filter it:
 
   ```nix
@@ -133,6 +129,32 @@ readlink /run/current-system   # matches readlink ./result
       (dotfiles.lib.basePackages pkgs));
   ```
 
-- **Editor and terminal tweaks** go in `~/.config/dotfiles-local/`
-  (`nvim.lua`, `wezterm.lua`), loaded when present, outside anything the
-  library manages.
+- **Editor and terminal tweaks** go in `~/.config/dotfiles-local/`, outside
+  anything the library manages, loaded when present and skipped silently
+  when absent. `nvim.lua` is plain Lua, run after the library's config.
+  `wezterm.lua` must return a function that receives the config table:
+
+  ```lua
+  -- ~/.config/dotfiles-local/wezterm.lua
+  return function(config)
+    config.font_size = 13.0
+  end
+  ```
+
+- **Settings their apps rewrite** (Claude Code's and Pi's `settings.json`)
+  arrive as real, writable files seeded from the library. They follow
+  library updates only until you change them in the app; after that your
+  local file wins and is never overwritten.
+
+## Developing the library
+
+Set one option in your machine's module to work on the library itself:
+
+```nix
+dotfiles.devCheckout = "/path/to/your/dotfiles/checkout";
+```
+
+Every authored config file then links into that checkout and is editable in
+place without a rebuild. Unset it to return to read-only store files; local
+settings edits are preserved across both transitions, and plugin pins
+reconcile automatically.

@@ -1,11 +1,7 @@
 { config, ... }:
 
-let
-  dotfiles = "${config.home.homeDirectory}/.dotfiles";
-in
-
 {
-  # Edit-in-place: the real file stays in my repo, ~/.config just points at it.
-  home.file.".config/wezterm".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/wezterm";
+  # Authored config; wezterm.lua loads ~/.config/dotfiles-local/wezterm.lua
+  # for machine-local tweaks, so read-only store sources cost nothing.
+  home.file.".config/wezterm".source = config.lib.dotfiles.authored "home/.config/wezterm";
 }

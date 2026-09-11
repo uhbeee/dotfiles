@@ -1,4 +1,4 @@
-{ user, ... }:
+{ config, ... }:
 
 {
   # The screenshot UI caches screencapture.location when it starts, so changing
@@ -12,6 +12,6 @@
   # home-manager's activation hook and change the system derivation (verified).
   # Phase 4, when the Mac consumes the export itself, removes that copy.
   system.activationScripts.postActivation.text = ''
-    killall -qu ${user} screencaptureui || true
+    killall -qu ${config.system.primaryUser} screencaptureui || true
   '';
 }

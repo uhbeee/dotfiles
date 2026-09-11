@@ -1,5 +1,12 @@
-{ user, ... }:
+{ config, ... }:
 
+let
+  # The consumer-owned identity options this module reads instead of a
+  # bespoke argument: the host file sets system.primaryUser and the matching
+  # users.users.<name>.home, and paths below derive from them.
+  user = config.system.primaryUser;
+  home = config.users.users.${user}.home;
+in
 {
   system.defaults = {
     NSGlobalDomain = {
@@ -28,7 +35,7 @@
     dock.persistent-others = [
       {
         folder = {
-          path = "/Users/${user}/Downloads";
+          path = "${home}/Downloads";
           arrangement = "date-added";
           displayas = "stack";
           showas = "fan";
@@ -39,7 +46,7 @@
     # Screenshots land in ~/Documents/Screenshots, not on the Desktop.
     # modules/home/darwin/screenshots.nix creates that directory: macOS silently
     # falls back to the Desktop if the configured path does not exist.
-    screencapture.location = "/Users/${user}/Documents/Screenshots";
+    screencapture.location = "${home}/Documents/Screenshots";
     finder.FXPreferredViewStyle = "Nlsv";  # list view by default
     finder.CreateDesktop = false;          # clean desktop
     trackpad.Clicking = true;              # tap to click

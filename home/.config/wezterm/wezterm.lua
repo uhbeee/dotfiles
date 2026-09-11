@@ -44,4 +44,23 @@ wezterm.on("window-focus-changed", function(window)
 	window:set_config_overrides(overrides)
 end)
 
+-- Machine-local tweaks live outside everything the library manages and
+-- survive every update. The file receives the config table to mutate.
+-- Absent file, silent skip; a broken file must not take the terminal down.
+local local_cfg = (os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config"))
+	.. "/dotfiles-local/wezterm.lua"
+local f = io.open(local_cfg, "r")
+if f then
+	f:close()
+	local ok, localfn = pcall(dofile, local_cfg)
+	if ok and type(localfn) == "function" then
+		local applied, err = pcall(localfn, config)
+		if not applied then
+			wezterm.log_error("dotfiles-local/wezterm.lua failed: " .. tostring(err))
+		end
+	elseif not ok then
+		wezterm.log_error("dotfiles-local/wezterm.lua failed to load: " .. tostring(localfn))
+	end
+end
+
 return config

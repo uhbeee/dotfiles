@@ -51,9 +51,12 @@ host files so shared config carries no username.
   are installed by hand. Note masApps is also exempt from the `zap` cleanup, so
   it never managed removal either.
 
-Config lives in the repo and is symlinked into place with `mkOutOfStoreSymlink`,
-so files under `home/` are edited here directly and take effect without a rebuild.
-Adding a *new* symlink still needs a rebuild.
+Authored config under `home/` is store-managed and read-only by default; the
+`dotfiles.devCheckout` option flips every authored link to edit-in-place via
+`mkOutOfStoreSymlink` (see `modules/home/common/options.nix`). This machine
+sets it in `flake.nix`, so files under `home/` are still edited here directly
+and take effect without a rebuild. Adding a *new* symlink still needs a
+rebuild, and consumers without the option get the store path.
 
 Secrets and runtime state never belong in this repo. `gh`'s token lives in
 `~/.config/gh/hosts.yml`, which is deliberately unmanaged, and herdr's logs,

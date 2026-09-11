@@ -156,10 +156,15 @@ test_zero_coupling_and_state_file() {
 test_static_typescript_and_repo_wiring() {
   # Home Manager links the extensions directory as a whole, so the calm
   # subdirectory auto-loads without any new declaration.
-  grep -q 'home.file.".pi/agent/extensions".source =' "$ROOT/modules/home/common/pi.nix" \
-    || fail "pi.nix no longer links ~/.pi/agent/extensions as a directory"
-  grep -q "mkOutOfStoreSymlink \"\${dotfiles}/home/.pi/agent/extensions\"" "$ROOT/modules/home/common/pi.nix" \
-    || fail "pi.nix changed the Pi extensions link target"
+  grep -q 'home.file.".pi/agent/extensions".source = authored "home/.pi/agent/extensions"' "$ROOT/modules/home/common/pi.nix" \
+    || fail "pi.nix no longer links ~/.pi/agent/extensions as a directory via the authored helper"
+  # The helper is what guarantees the target: store copy of the repo tree by
+  # default, checkout link under dotfiles.devCheckout. Its definition moving
+  # or changing shape needs a deliberate test update, not a silent pass.
+  grep -q 'mkOutOfStoreSymlink "${config.dotfiles.devCheckout}/${sub}"' "$ROOT/modules/home/common/options.nix" \
+    || fail "options.nix changed the authored-file dev-mode link mechanism"
+  grep -q 'else ../../.. + "/${sub}"' "$ROOT/modules/home/common/options.nix" \
+    || fail "options.nix changed the authored-file store-mode source"
   [ -f "$CALM_DIR/index.ts" ] || fail "calm extension entry point missing"
   [ -f "$CALM_DIR/LICENSE" ] || fail "calm license file missing"
 

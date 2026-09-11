@@ -1,11 +1,8 @@
 { config, ... }:
 
-let
-  dotfiles = "${config.home.homeDirectory}/.dotfiles";
-in
-
 {
-  # Edit-in-place: the real file stays in my repo, ~/.config just points at it.
-  home.file.".config/nvim".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/nvim";
+  # The whole authored config: store-managed for consumers, checkout link
+  # under dotfiles.devCheckout. Plugin pins are handled below; see
+  # lazy-pins.nix for the restore-and-verify machinery.
+  home.file.".config/nvim".source = config.lib.dotfiles.authored "home/.config/nvim";
 }

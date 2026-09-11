@@ -1,4 +1,5 @@
 {
+  "model": "claude-fable-5[1m]",
   "hooks": {
     "SessionStart": [
       {
@@ -6,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$HOME/.claude/hooks/herdr-agent-state.sh\" session",
+            "command": "[ -x \"$HOME/.claude/hooks/herdr-agent-state.sh\" ] && bash \"$HOME/.claude/hooks/herdr-agent-state.sh\" session || true",
             "timeout": 10
           }
         ]
@@ -19,5 +20,5 @@
   },
   "tui": "fullscreen",
   "theme": "dark",
-  "model": "claude-fable-5[1m]"
+  "skipDangerousModePermissionPrompt": true
 }

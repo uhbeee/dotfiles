@@ -45,7 +45,18 @@
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
             home-manager.extraSpecialArgs = { inherit user; };
-            home-manager.users.${user} = import ./home.nix;
+            # Identity is this machine's, so it lives here with the machine,
+            # not in the exported home.nix.
+            home-manager.users.${user} = {
+              imports = [ ./home.nix ];
+              home.username = user;
+              home.homeDirectory = "/Users/${user}";
+              home.stateVersion = "24.11";
+              # This machine develops the library: authored configs link into
+              # the checkout and are editable in place. Consumers leave this
+              # unset and get everything read-only from the store.
+              dotfiles.devCheckout = "/Users/${user}/.dotfiles";
+            };
           }
         ];
       };
