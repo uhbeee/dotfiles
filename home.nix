@@ -35,6 +35,7 @@
     ./modules/home/common/neovim.nix
     ./modules/home/common/lazy-pins.nix
     ./modules/home/common/agents.nix
+    ./modules/home/common/plan-skills.nix
     ./modules/home/common/pi.nix
     ./modules/home/darwin/wezterm.nix
     ./modules/home/darwin/herdr.nix
