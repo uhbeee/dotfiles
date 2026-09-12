@@ -67,16 +67,13 @@ effect immediately. Only adding a *new* symlink needs a rebuild.
 The flake also exports its modules, so a separate machines repo can consume
 them instead of cloning this one.
 
-**Provisional:** the old assumptions are gone - the modules read standard
-`home.username`/`home.homeDirectory`, impose no `stateVersion`, and authored
-config arrives read-only from the nix store (a consumer home configuration
-builds for a user this machine has never heard of). Overrides work:
-`mkDefault` scalars, `~/.config/dotfiles-local/` files,
-`dotfiles.excludePackages`. Library developers set `dotfiles.devCheckout` to a local
-checkout to get edit-in-place links instead of store files. Still open before
-this notice goes away: a consumer build from a clean committed revision and
-the disposable-account behavioral run (build order, tasks 3.6-3.7). The
-outputs:
+The modules read standard `home.username`/`home.homeDirectory`, impose no
+`stateVersion`, and authored config arrives read-only from the nix store -
+verified by consumer builds from a clean committed revision and a behavioral
+run in a disposable account. Overrides: `mkDefault` scalars,
+`~/.config/dotfiles-local/` files, `dotfiles.excludePackages`. Library
+developers set `dotfiles.devCheckout` to a local checkout to get
+edit-in-place links instead of store files. The outputs:
 
 - `homeManagerModules.default` - shell, editor, CLI, prompt, agents
 - `darwinModules.default` - the macOS system preferences, self-contained

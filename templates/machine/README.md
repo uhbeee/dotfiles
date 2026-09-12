@@ -6,13 +6,6 @@ per-machine divergences. The library never learns any of it. Keep this repo
 private if you like; it holds no secrets either way - secrets never go in
 either repo.
 
-> **Provisional.** The exported modules now honor this contract: identity is
-> yours (`home.username`/`home.homeDirectory`/`stateVersion`), authored config
-> arrives read-only from the nix store, and the override mechanisms below are
-> implemented. What remains before this banner goes: the library's consumer
-> build from a clean committed revision and its disposable-account behavioral
-> run (its `docs/build-order.md`, tasks 3.6-3.7).
-
 ## Layout
 
 - `flake.nix` binds this repo to the library and defines one output per

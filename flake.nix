@@ -85,8 +85,8 @@
       # tests against.
       overlays.default = piOverlay;
 
-      # The package list as data. Removing a package on one machine means
-      # assigning a filtered copy with lib.mkForce; see lib/base-packages.nix.
+      # The package list as data. Removing a package on one machine is the
+      # dotfiles.excludePackages option; see lib/base-packages.nix.
       lib.basePackages = import ./lib/base-packages.nix;
 
       templates.machine = {
