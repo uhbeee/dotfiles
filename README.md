@@ -71,8 +71,8 @@ them instead of cloning this one.
 `home.username`/`home.homeDirectory`, impose no `stateVersion`, and authored
 config arrives read-only from the nix store (a consumer home configuration
 builds for a user this machine has never heard of). Overrides work:
-`mkDefault` scalars, `~/.config/dotfiles-local/` files, filtered
-`lib.basePackages`. Library developers set `dotfiles.devCheckout` to a local
+`mkDefault` scalars, `~/.config/dotfiles-local/` files,
+`dotfiles.excludePackages`. Library developers set `dotfiles.devCheckout` to a local
 checkout to get edit-in-place links instead of store files. Still open before
 this notice goes away: a consumer build from a clean committed revision and
 the disposable-account behavioral run (build order, tasks 3.6-3.7). The
@@ -82,8 +82,8 @@ outputs:
 - `darwinModules.default` - the macOS system preferences, self-contained
 - `overlays.default` - the pinned-package overlay (Pi), so consumers build
   the same versions this repo tests against
-- `lib.basePackages` - the package list as a function of `pkgs`, so one
-  machine can remove a package with `lib.mkForce` over a filtered copy
+- `lib.basePackages` - the package list as data, a function of `pkgs`;
+  removal on one machine is the `dotfiles.excludePackages` option
 - `templates.machine` - scaffolds that machines repo
 
 Already have a machines repo? Add `dotfiles` as an input with

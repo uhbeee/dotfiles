@@ -121,13 +121,15 @@ readlink /run/current-system   # matches readlink ./result
 
 - **Simple preferences** ship as `lib.mkDefault`: assign your own value in a
   module here and it wins, and the rest of the library's settings stay.
-- **Removing a package**: the library exports its list as data. Filter it:
+- **Removing a package**: name it in the library's option:
 
   ```nix
-  home.packages = lib.mkForce
-    (builtins.filter (p: (p.pname or "") != "lazygit")
-      (dotfiles.lib.basePackages pkgs));
+  dotfiles.excludePackages = [ "lazygit" ];
   ```
+
+  This filters only the library's base list. Do not `lib.mkForce` over
+  `home.packages` instead: that discards every module-contributed package
+  (zsh, starship, pi's node runtime), not just the one you meant.
 
 - **Editor and terminal tweaks** go in `~/.config/dotfiles-local/`, outside
   anything the library manages, loaded when present and skipped silently
@@ -141,6 +143,12 @@ readlink /run/current-system   # matches readlink ./result
   end
   ```
 
+- **First `nvim` open is silent by design.** Activation already restored
+  every plugin to the library's pins, so there is no install splash; a quiet
+  start IS the success case. You only see lazy's installer when pins change.
+- **herdr's binary ships in the darwin composition** (Homebrew). A
+  standalone home-manager consumer gets herdr's config but must install the
+  binary themselves; the config is inert without it.
 - **Settings their apps rewrite** (Claude Code's and Pi's `settings.json`)
   arrive as real, writable files seeded from the library. They follow
   library updates only until you change them in the app; after that your

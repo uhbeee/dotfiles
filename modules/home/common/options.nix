@@ -15,6 +15,20 @@
     '';
   };
 
+  options.dotfiles.excludePackages = lib.mkOption {
+    type = lib.types.listOf lib.types.str;
+    default = [ ];
+    example = [ "lazygit" ];
+    description = ''
+      Names (pname) of base-list packages this machine should not install.
+      Filters only the library's base list, so packages contributed by
+      modules stay: tool runtime dependencies (pi's nodejs) and the packages
+      programs.* options install (zsh, starship, ...). A whole-option
+      override with lib.mkForce would discard those too, which is why this
+      option exists instead of a filter recipe.
+    '';
+  };
+
   # The one way modules reference an authored file. `sub` is a repo-relative
   # path like "home/.config/nvim". Store mode imports the file into the store
   # (read-only); dev mode links into the checkout (editable, no rebuild).

@@ -1,9 +1,10 @@
 # The library's package list as a plain function, exported from the flake as
 # `lib.basePackages`. home.nix consumes it too, so there is exactly one list:
 # what the library installs and what a consumer filters are the same data.
-# Removal, for a consumer:
-#   home.packages = lib.mkForce
-#     (builtins.filter (p: p.pname or "" != "lazygit") (dotfiles.lib.basePackages pkgs));
+# Removal, for a consumer, is the dotfiles.excludePackages option:
+#   dotfiles.excludePackages = [ "lazygit" ];
+# (never lib.mkForce over home.packages: that discards every
+# module-contributed package - zsh, starship, pi's nodejs - not just these).
 pkgs:
 
 with pkgs; [

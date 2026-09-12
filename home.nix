@@ -1,16 +1,18 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 
 {
   # No identity here. This file is the library's exported home module tree:
   # the consumer owns home.username, home.homeDirectory and home.stateVersion,
   # and every module below reads config.home.* instead of asking who you are.
 
-  # home.packages concatenates across modules in import order, so it stays in
-  # this root module, after home-manager's own contributions, exactly where the
-  # pre-split file put it. The list itself lives in lib/base-packages.nix,
-  # which the flake also exports as `lib.basePackages`: one list, one place,
-  # whether the library installs it or a consumer filters it.
-  home.packages = import ./lib/base-packages.nix pkgs;
+  # The base list lives in lib/base-packages.nix, which the flake also
+  # exports as `lib.basePackages`: one list, one place, whether the library
+  # installs it or a consumer filters it. Tool-scoped runtime dependencies
+  # (pi.nix's nodejs) are the one exception: they belong beside the tool
+  # that needs them, and removing the tool's module removes them too.
+  home.packages = builtins.filter
+    (p: !(builtins.elem (p.pname or p.name or "") config.dotfiles.excludePackages))
+    (import ./lib/base-packages.nix pkgs);
   fonts.fontconfig.enable = true;
 
   # initContent is ordered text: pieces concatenate in module-definition order,
