@@ -19,6 +19,8 @@
       "claude-code"
       "codex"
       "flycut"
+      # Logitech mouse configuration, local-first (auto_updates cask).
+      "openlogi"
       # Chrome self-updates via Keystone (the cask is auto_updates), so brew
       # installs it and then leaves the version alone.
       "google-chrome"
