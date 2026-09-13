@@ -17,6 +17,7 @@ owner's call. Contents:
 - `plan_review.md` - the design review (plan-create's loop).
 - `<work_item_slug>_review.md` - one per item (plan-item-review).
 - `<scope_slug>_conformance.md` - conformance audits.
+- `ARCHIVED.md` - provenance stamp, added at archive time (below).
 
 ## plan.md
 
@@ -88,6 +89,41 @@ sign-off, recorded as a `[decision]` worklog entry. `plan-implement`
 refuses to run against a plan that is not approved. After approval the
 plan is frozen: changes happen as `[decision]` entries or an explicit
 re-review, never as silent edits.
+
+## Archival
+
+Plans stay in their repo while the work is underway; a finished plan
+moves to an archive repo, where past plans from every project form one
+searchable corpus of prior art (plan-create's interview should point
+there).
+
+- **Terminal gate**: archive only when every breakdown item is
+  `done <commit>` and the latest conformance file has no open items.
+  Anything short of that is the human's call, recorded as a
+  `[decision]` worklog entry before archiving.
+- **Destination**: an argument; the default is read from
+  `~/.config/dotfiles-local/plan-archive-root` (one line: the absolute
+  path to a local clone of the archive repo). `dotfiles-local` is the
+  machine-local override directory - unmanaged and writable, unlike
+  this managed core directory. Ask when neither exists.
+- **Stamp**: before the move, add `ARCHIVED.md` to the plan directory:
+  source repo (path and remote), the commit range the items landed as,
+  created / approved / archived dates, a short outcome paragraph
+  against the plan's Intent, and the plan-skills core version (the git
+  commit of the checkout `~/.config/plan-skills` resolves into, or the
+  nix store path when it does not).
+- **Layout**: the plan directory moves to
+  `<archive repo>/<source repo name>/<plan_name_slug>/`, and one index
+  line is appended to the archive repo's README.md.
+- **Append-only**: the archive never loses history. If the destination
+  directory already exists (a reused slug, or two source repos sharing
+  a basename), stop and ask the human before copying anything; never
+  overwrite or merge into an existing entry, and leave the source
+  untouched until the collision is resolved.
+- **Tombstone**: in the source repo, one line appended to
+  `docs/plans/ARCHIVE.md` - plan name, archive date, destination, final
+  commit - and the plan directory is removed. No stub directories.
+- The human owns the commits in both repos, as always.
 
 ## Artifacts (the human review surface)
 

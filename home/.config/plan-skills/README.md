@@ -18,6 +18,9 @@ and owns every commit.
   -> plan-sync               -> plan docs reconciled with what landed
 
 /plan-conformance-pass       whole-delivery audit against the plan
+
+/plan-archive <plan-dir>     finished plan moves to the archive repo
+                             (provenance stamp, index, tombstone)
 ```
 
 `plan-item-review` and `plan-conformance-pass` also run standalone: any
@@ -49,4 +52,7 @@ In this directory:
 Per plan, everything lives in one directory (default
 `docs/plans/<name>/`): the two plan docs, `worklog.md`, and every
 review and conformance file - the complete audit trail of how the work
-came to be.
+came to be. When the work is done, `plan-archive` moves that directory
+to your archive repo (set its local path in
+`~/.config/dotfiles-local/plan-archive-root`), where plans from every
+project accumulate into a searchable corpus of prior art.
