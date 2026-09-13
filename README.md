@@ -38,7 +38,19 @@ upstream. Anything broken in here is mine, not his.
 - **CLI**: ripgrep, fd, fzf, jq, lazygit, neovim, git, gh, Hack Nerd Font
 - **Apps** via Homebrew: wezterm, claude-code, herdr
 - **Editor**: Neovim with rose-pine moon, oil, snacks, neogit, gitsigns, which-key
-- **Agents**: one `home/AGENTS.md` shared by Claude Code, Codex and opencode
+- **Agents**: one `home/AGENTS.md` shared by Claude Code, Codex and opencode,
+  plus the agent skills below
+
+## Agent skills
+
+Skill families shipped by default, usable from both Claude Code (skills)
+and Codex (custom prompts):
+
+| Family | What it does | Docs |
+|--------|--------------|------|
+| `plan-*` | Plan-driven work with AI agents: create a plan through an interview and design review, implement work items, gate each through an impartial cross-LLM review loop, keep the plan docs synced. All agent-to-agent communication goes through auditable markdown. | [README](home/.config/plan-skills/README.md) |
+
+New families get a row here and their own README next to their core files.
 
 ## Usage
 

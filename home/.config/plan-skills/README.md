@@ -1,0 +1,52 @@
+# plan-skills
+
+A plan-driven workflow for working with AI agents, built on one rule:
+agents never talk to each other directly. An executor agent does the
+work, an impartial reviewer agent (a different LLM, in its own session)
+judges it against plan documents, and everything between them goes
+through markdown files a human can audit. The human gates every round
+and owns every commit.
+
+## The lifecycle
+
+```
+/plan-create <name>          interview -> plan.md + breakdown.md
+                             -> AI design review loop -> your sign-off
+
+/plan-implement <plan-dir>   next work item: implement
+  -> plan-item-review        -> impartial review loop over the item
+  -> plan-sync               -> plan docs reconciled with what landed
+
+/plan-conformance-pass       whole-delivery audit against the plan
+```
+
+`plan-item-review` and `plan-conformance-pass` also run standalone: any
+finished work with a source-of-truth doc can be reviewed, plan or not.
+
+## Driving it
+
+Type the commands above in claude code (skills) or codex (custom
+prompts); either agent orchestrates the same protocol from these files.
+You will be prompted for whatever is missing: plan directory, plan doc
+paths, reviewer profile (which LLM reviews, e.g. `codex`, `codex:<model>`,
+`claude`).
+
+What to expect while a loop runs: the orchestrator pauses after every
+reviewer round so you can read the review file before anything is acted
+on; open items get executor responses appended under them and only the
+reviewer closes them; a disagreement that survives 3 rounds is escalated
+to you; nothing is ever committed or pushed by an agent.
+
+## The files
+
+In this directory:
+
+- `PROTOCOL.md` - the seats, the loop, isolation rules, CLI profiles.
+- `ROLES.md` - the prompt templates each spawned seat receives.
+- `ARTIFACTS.md` - the plan directory layout: plan.md, breakdown.md,
+  the append-only worklog, the approval gate, artifact publishing.
+
+Per plan, everything lives in one directory (default
+`docs/plans/<name>/`): the two plan docs, `worklog.md`, and every
+review and conformance file - the complete audit trail of how the work
+came to be.

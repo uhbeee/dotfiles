@@ -5,9 +5,14 @@ All communication goes through one markdown review file the human can audit
 at any point. The plan documents, not anyone's session memory, are the
 source of truth for what the work should be.
 
-Two entry points share this protocol: `plan-review` (the loop) and
-`plan-conformance-pass` (the terminal audit). Role prompt templates live in
-ROLES.md next to this file.
+The plan-* family shares this protocol: `plan-create` (interview, draft,
+design review, human sign-off), `plan-implement` (the next work item),
+`plan-item-review` (the review loop for one implemented item),
+`plan-sync` (reconcile the plan docs after an item lands) and
+`plan-conformance-pass` (the whole-delivery audit). Role prompt templates
+live in ROLES.md next to this file; the documents the family maintains -
+the plan directory, worklog, approval gate, artifact checkpoints - are
+defined in ARTIFACTS.md.
 
 ## Seats
 
@@ -48,7 +53,7 @@ Hard rules, regardless of who fills which seat:
   file outside the repo (orchestrator picks a temp path and reports it).
   The review file stays the only channel of record.
 
-## The loop (plan-review)
+## The loop (plan-item-review)
 
 1. **REVIEW**: orchestrator spawns the reviewer with the `review-initial`
    template. Reviewer writes the review file.
@@ -76,6 +81,22 @@ invocations - never two writers against the review file at once - and the
 executor addresses open items in every section. The round cap applies per
 item, as usual.
 
+## The design review (inside plan-create)
+
+The same loop, run over the plan itself before any implementation: the
+reviewer plays principal engineer on a design document. Differences from
+the item loop: the templates are `design-review` / `design-review-verify`;
+the review file is `plan_review.md` in the plan directory; and the source
+of truth is the Intent and Decisions sections of the plan under review,
+since no other document outranks it yet. The orchestrator is the executor
+and addresses items by editing the plan documents. The loop's rules
+(pause points, resumed reviewer session, round cap, sole-closer) apply
+unchanged, with one exception: there is no conformance gate, because
+nothing has been delivered yet - step 6 of the item loop does not apply.
+When the design checklist closes, what follows is the human's own review
+and sign-off (ARTIFACTS.md, "Approval gate"); the loop informs the
+sign-off, never replaces it.
+
 ## The audit (plan-conformance-pass)
 
 One reviewer invocation with the `conformance` template, fresh session.
@@ -84,7 +105,7 @@ entire plan (a standalone drift audit across everything delivered).
 It answers a different question than the loop: not "were my comments
 addressed" but "is what was delivered what the plan called for". Output is
 a conformance file in the same checklist format; findings worth acting on
-feed back into a `plan-review` round.
+feed back into a `plan-item-review` round.
 
 ## Profiles
 

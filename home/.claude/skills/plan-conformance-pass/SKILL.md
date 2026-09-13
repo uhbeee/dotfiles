@@ -1,6 +1,6 @@
 ---
 name: plan-conformance-pass
-description: Audit delivered work against the plan documents as a whole. Scope is one work item (the terminal gate of a plan-review loop) or the entire plan (a standalone drift audit). An impartial reviewer agent writes a conformance checklist file. Use after a review loop closes, or on demand across everything delivered so far.
+description: Audit delivered work against the plan documents as a whole. Scope is one work item (the terminal gate of a plan-item-review loop) or the entire plan (a standalone drift audit). An impartial reviewer agent writes a conformance checklist file. Use after a review loop closes, or on demand across everything delivered so far.
 ---
 
 You are the orchestrator of the conformance audit defined in
@@ -17,5 +17,5 @@ Arguments (ask for whatever is missing rather than guessing):
 Run it as one reviewer invocation, fresh session, with the `conformance`
 template filled and nothing else in the prompt. Capture stdout to a temp
 log. When it finishes, report the findings to the human with the file
-path. If findings need acting on, that is a new `plan-review` round, not
+path. If findings need acting on, that is a new `plan-item-review` round, not
 something to quietly fix: the human decides.

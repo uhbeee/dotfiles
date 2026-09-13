@@ -1,5 +1,5 @@
 ---
-name: plan-review
+name: plan-item-review
 description: Run the plan review loop for a finished work item. An impartial reviewer agent (default codex) judges the work against the plan docs and writes a checklist review file; the executor addresses items; the loop repeats until the reviewer closes everything. Use when a phase or work item from a plan document is done and needs review.
 ---
 

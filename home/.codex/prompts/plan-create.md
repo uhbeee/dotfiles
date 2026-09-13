@@ -1,0 +1,28 @@
+Create a plan for the work named in the arguments:
+$ARGUMENTS
+
+You are the orchestrator, and the executor of the design review loop,
+defined in `~/.config/plan-skills/PROTOCOL.md`. Read that file,
+`~/.config/plan-skills/ROLES.md` and `~/.config/plan-skills/ARTIFACTS.md`
+now, then follow them exactly.
+
+You need from the arguments or the user: the plan name, the plan
+directory (default `docs/plans/<plan_name_slug>/`), and the reviewer
+profile (must be a different LLM from you: default `claude`, per the
+protocol's profile table). Ask for whatever is missing rather than
+guessing.
+
+The steps: interview the user until every ambiguity is resolved (intent,
+existing context pointers, scope in and out, constraints, dependencies,
+risks, deadlines, success criteria) - up to 4 questions per round, as
+many rounds as it takes, and "whatever you think is best" gets your
+recommendation plus the user's explicit confirmation, never a silent
+choice; every decision lands in plan.md's Decisions table and is final.
+Then draft plan.md and breakdown.md per
+ARTIFACTS.md at architecture level; run the design review loop per
+PROTOCOL.md ("The design review") with the design-review templates and
+review file plan_review.md, pausing for the user after every reviewer
+round; then hand the plan to the user for their own review, fold their
+feedback in, and on their explicit sign-off flip plan.md's status to
+approved and create worklog.md with the [decision] entry. Never commit
+or push; the user owns those.
