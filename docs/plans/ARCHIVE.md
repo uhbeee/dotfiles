@@ -1,3 +1,6 @@
 - plan-skills: archived 2026-09-13 to ZK/plans dotfiles/plan-skills (0f87881)
 - plan-family-expansion: archived 2026-09-13 to ZK/plans dotfiles/plan-family-expansion (3f4618d)
 - plan-archive: archived 2026-09-13 to ZK/plans dotfiles/plan-archive (f85ea03)
+- spawned-executor: archived 2026-09-13 to ZK/plans dotfiles/spawned-executor (de68662)
+- tmux-tui-smoke: archived 2026-09-13 to ZK/plans dotfiles/tmux-tui-smoke (5b911d2)
+- herdr-runtime-cleanup: archived 2026-09-13 to ZK/plans dotfiles/herdr-runtime-cleanup (0210c21)
