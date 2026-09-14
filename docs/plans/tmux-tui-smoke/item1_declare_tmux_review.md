@@ -1,0 +1,1 @@
+No issues found: `modules/home/common/pi.nix:17-29` satisfies Item 1's declaration, placement, rationale, and scope requirements; independent consumer-probe verification was blocked by sandbox denial of Nix cache writes, and post-activation checks remain the human step specified in the breakdown.
