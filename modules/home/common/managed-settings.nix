@@ -23,14 +23,18 @@
   # untouched.
   #
   # Callers pass: relpath (repo-relative source), target (home-relative
-  # path), marker (state-file name). They wire the results as:
+  # path), marker (state-file name), and optionally source, a store path
+  # that overrides what store mode seeds - for settings derived from the
+  # authored file (claude.nix strips a platform hook) rather than shipped
+  # verbatim. Dev mode always links the authored checkout file; the
+  # override affects seeding only. They wire the results as:
   #   home.file.<target> = ms.file;
   #   home.activation.<name>ToDev = ms.toDev;
   #   home.activation.<name>Seed = ms.seed;
-  config.lib.dotfiles.managedSettings = { relpath, target, marker }:
+  config.lib.dotfiles.managedSettings = { relpath, target, marker, source ? null }:
     let
       cfg = config.dotfiles;
-      source = ../../.. + "/${relpath}";
+      seedSource = if source != null then source else ../../.. + "/${relpath}";
       stateRef = ''"''${XDG_STATE_HOME:-$HOME/.local/state}"/dotfiles'';
     in
     {
@@ -77,7 +81,7 @@
         (lib.hm.dag.entryAfter [ "linkGeneration" ] ''
           live="$HOME/${target}"
           seedMarker=${stateRef}/${marker}
-          default=${lib.escapeShellArg "${source}"}
+          default=${lib.escapeShellArg "${seedSource}"}
           run mkdir -p "$(dirname "$live")" "$(dirname "$seedMarker")"
           pendingRestore=${stateRef}/${marker}.pending-restore
           if [ ! -e "$live" ]; then

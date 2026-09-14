@@ -60,9 +60,9 @@ cat > "$probe/flake.nix" <<EOF
   };
   outputs = { self, dotfiles, nixpkgs, home-manager, ... }:
     let
-      mk = user: home: home-manager.lib.homeManagerConfiguration {
+      mk = system: user: home: profile: home-manager.lib.homeManagerConfiguration {
         pkgs = import nixpkgs {
-          system = builtins.currentSystem;
+          inherit system;
           overlays = [ dotfiles.overlays.default ];
           config.allowUnfree = true;
         };
@@ -72,18 +72,26 @@ cat > "$probe/flake.nix" <<EOF
             home.username = user;
             home.homeDirectory = home;
             home.stateVersion = "25.05";
+            dotfiles.profile = profile;
           }
         ];
       };
     in {
-      homeConfigurations."synthea" = mk "synthea" "/opt/oddhome1";
-      homeConfigurations."quorra" = mk "quorra" "/Users/quorra";
+      homeConfigurations."synthea" = mk builtins.currentSystem "synthea" "/opt/oddhome1" "cli";
+      homeConfigurations."quorra" = mk builtins.currentSystem "quorra" "/Users/quorra" "full";
+      # Eval-only fixtures with explicit systems, so the platform-selection
+      # checks below hold on any runner: building Linux needs a Linux
+      # builder (phase 6) and building Darwin needs a Mac, but which Claude
+      # settings each platform selects is decided at eval time.
+      homeConfigurations."linnea" = mk "aarch64-linux" "linnea" "/home/linnea" "cli";
+      homeConfigurations."delia" = mk "aarch64-darwin" "delia" "/Users/delia" "full";
+      homeConfigurations."freya" = mk "aarch64-linux" "freya" "/home/freya" "full";
     };
 }
 EOF
 
-check_user() { # check_user <username> <homedir>
-  local u=$1 home=$2 out closure links
+check_user() { # check_user <username> <homedir> <profile>
+  local u=$1 home=$2 profile=$3 out closure links
   # Build diagnostics stay visible on stderr so environmental failures
   # (sandbox, network, eval) are diagnosable, not silently swallowed.
   if ! out="$(cd "$probe" && nix build --no-link --print-out-paths --impure \
@@ -154,9 +162,112 @@ check_user() { # check_user <username> <homedir>
   else
     ok "$u: no link target escapes the store"
   fi
+
+  # Profile contract (phase 5): "cli" contains the shell and tools and
+  # nothing graphical; "full" carries the GUI-adjacent config. WezTerm's
+  # config is the portable marker for both directions; the launch agent
+  # and screenshots checks are cli-side only, since what full generates
+  # for them is platform-dependent.
+  if [ "$profile" = cli ]; then
+    if [ -e "$out/home-files/.config/wezterm" ]; then
+      bad "$u: cli profile still ships wezterm config"
+    else
+      ok "$u: cli profile has no wezterm config in home-files"
+    fi
+    case "$(scan_str "wezterm" "$(ls "$out/home-path/bin" 2>/dev/null)")" in
+      MATCH) bad "$u: cli profile has wezterm in home-path packages";;
+      CLEAN) ok "$u: cli profile has no wezterm in home-path packages";;
+      *)     bad "$u: home-path package scan could not complete";;
+    esac
+    local gui
+    gui="$(find "$out/home-files" -iname '*flycut*' 2>/dev/null || true)"
+    if [ -n "$gui" ]; then
+      bad "$u: cli profile still ships the Flycut launch agent"
+    else
+      ok "$u: cli profile has no Flycut launch agent"
+    fi
+    case "$(scan "Documents/Screenshots" "$out/activate")" in
+      MATCH) bad "$u: cli profile still creates the screenshots directory";;
+      CLEAN) ok "$u: cli profile has no screenshots activation";;
+      *)     bad "$u: screenshots scan could not complete";;
+    esac
+  else
+    if [ -e "$out/home-files/.config/wezterm" ]; then
+      ok "$u: full profile ships wezterm config"
+    else
+      bad "$u: full profile is missing wezterm config"
+    fi
+  fi
 }
 
-check_user synthea /opt/oddhome1
-check_user quorra  /Users/quorra
+check_user synthea /opt/oddhome1 cli
+check_user quorra  /Users/quorra  full
+
+# Claude settings selection (phase 5.3): the herdr hook wiring is darwin's,
+# so a Linux consumer of the default module list must select the portable,
+# hook-stripped settings with no flag overridden anywhere - while darwin
+# keeps the authored file, hook included. The selection point is the seed
+# script's default= path; eval alone pins it down, no Linux builder needed.
+check_seed() { # check_seed <config> <want-pattern> <label>
+  local seed
+  if ! seed="$(cd "$probe" && nix eval --raw --impure \
+      ".#homeConfigurations.$1.config.home.activation.claudeSettingsSeed.data")"; then
+    bad "$1: claude seed script eval failed"
+    return
+  fi
+  case "$(scan_str "$2" "$seed")" in
+    MATCH) ok "$1: $3";;
+    CLEAN) bad "$1: $3 - seed source is wrong";;
+    *)     bad "$1: claude seed scan could not complete";;
+  esac
+}
+check_seed linnea "claude-settings-portable.json" \
+  "linux consumer seeds the portable hook-free claude settings"
+
+# Darwin's side, by content, against the explicit aarch64-darwin fixture so
+# the expectation holds on any runner (quorra rides currentSystem and would
+# rightly select portable settings on a Linux host). Its seed source must
+# not be the portable file, and the file it does seed (imported into the
+# store at eval time, so readable without a Darwin build) must carry the
+# guarded herdr hook.
+if seed="$(cd "$probe" && nix eval --raw --impure \
+    ".#homeConfigurations.delia.config.home.activation.claudeSettingsSeed.data")"; then
+  case "$(scan_str "claude-settings-portable.json" "$seed")" in
+    CLEAN) ok "delia: darwin consumer does not seed the portable settings";;
+    MATCH) bad "delia: darwin consumer wrongly seeds the portable settings";;
+    *)     bad "delia: claude seed scan could not complete";;
+  esac
+  def="$(printf '%s\n' "$seed" | sed -n "s/^default=//p" | head -1 | tr -d \')"
+  if [ -f "$def" ]; then
+    case "$(scan "herdr-agent-state.sh" "$def")" in
+      MATCH) ok "delia: darwin seed carries the guarded herdr hook";;
+      CLEAN) bad "delia: darwin seed lost the herdr hook";;
+      *)     bad "delia: darwin seed content scan could not complete";;
+    esac
+  else
+    bad "delia: darwin seed source not readable at $def"
+  fi
+else
+  bad "delia: claude seed script eval failed"
+fi
+
+# Linux "full" (eval-only): full means the GUI-adjacent *portable* config -
+# WezTerm - and never the macOS-only pieces, whose modules gate on platform
+# as well as profile. Checked as one attrset so a wrong value names itself.
+if lin_full="$(cd "$probe" && nix eval --json --impure \
+    ".#homeConfigurations.freya.config" --apply 'c: {
+      flycut = c.launchd.agents ? flycut;
+      screenshots = c.home.activation ? screenshotsDir;
+      wezterm = c.home.file ? ".config/wezterm";
+    }')"; then
+  want='{"flycut":false,"screenshots":false,"wezterm":true}'
+  if [ "$lin_full" = "$want" ]; then
+    ok "freya: linux full keeps wezterm and no darwin-only config"
+  else
+    bad "freya: linux full mismatch: got $lin_full, want $want"
+  fi
+else
+  bad "freya: linux full eval failed"
+fi
 
 exit $fail

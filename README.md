@@ -76,8 +76,11 @@ The modules read standard `home.username`/`home.homeDirectory`, impose no
 `stateVersion`, and authored config arrives read-only from the nix store -
 verified by consumer builds from a clean committed revision and a behavioral
 run in a disposable account. Overrides: `mkDefault` scalars,
-`~/.config/dotfiles-local/` files, `dotfiles.excludePackages`. Library
-developers set `dotfiles.devCheckout` to a local checkout to get
+`~/.config/dotfiles-local/` files, `dotfiles.excludePackages`. Scope is
+`dotfiles.profile`: the default `"full"` is everything, `"cli"` drops the
+GUI-adjacent config (WezTerm and friends) for servers and containers -
+home config only, system scope is which system modules a host imports.
+Library developers set `dotfiles.devCheckout` to a local checkout to get
 edit-in-place links instead of store files. The outputs:
 
 - `homeManagerModules.default` - shell, editor, CLI, prompt, agents

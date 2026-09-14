@@ -1,6 +1,20 @@
 { config, lib, ... }:
 
 {
+  options.dotfiles.profile = lib.mkOption {
+    type = lib.types.enum [ "cli" "full" ];
+    default = "full";
+    example = "cli";
+    description = ''
+      How much of the home configuration this machine gets. "cli" is the
+      shell, prompt, git, CLI tools, Neovim and the agent config - nothing
+      graphical; "full" adds the GUI-adjacent config (WezTerm, and on macOS
+      the Flycut launch agent and screenshots directory). Home scope only:
+      system-side scope - casks, the Dock, a desktop - is decided by which
+      system modules the host file imports, never by this option.
+    '';
+  };
+
   options.dotfiles.devCheckout = lib.mkOption {
     type = lib.types.nullOr lib.types.str;
     default = null;

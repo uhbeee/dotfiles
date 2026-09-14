@@ -36,6 +36,7 @@
               home.username = machine.user;
               home.homeDirectory = machine.homeDirectory;
               home.stateVersion = machine.stateVersion;
+              dotfiles.profile = machine.profile;
               # Activating a built activationPackage does not install the
               # home-manager CLI by itself. This does, from this flake's
               # locked input, so `home-manager generations` and rollbacks
@@ -73,6 +74,7 @@
             home-manager.users.${machine.user} = {
               imports = [ dotfiles.homeManagerModules.default ];
               home.stateVersion = machine.stateVersion;
+              dotfiles.profile = machine.profile;
             };
           }
         ];

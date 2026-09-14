@@ -37,9 +37,9 @@
     ./modules/home/common/agents.nix
     ./modules/home/common/plan-skills.nix
     ./modules/home/common/pi.nix
-    ./modules/home/darwin/wezterm.nix
+    ./modules/home/common/claude.nix
+    ./modules/home/common/wezterm.nix
     ./modules/home/darwin/herdr.nix
-    ./modules/home/darwin/claude.nix
     ./modules/home/darwin/flycut.nix
     ./modules/home/darwin/screenshots.nix
   ];
