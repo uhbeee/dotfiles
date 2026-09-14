@@ -14,12 +14,19 @@ let
   };
 in
 {
-  # Pi's dependency, not a base preference: settings.json pins npm packages
-  # (pi-web-access, codex-fast-mode) that pi installs at runtime by spawning
-  # `npm`. Without node on PATH a clean account gets ENOENT and a broken pi
-  # (found by the 3.7 disposable-account probe). Declared here, next to the
-  # tool that needs it, rather than in the exported base list.
-  home.packages = [ pkgs.nodejs ];
+  # Pi's dependencies, not base preferences - declared here, next to the
+  # tool that needs them, rather than in the exported base list.
+  home.packages = [
+    # settings.json pins npm packages (pi-web-access, codex-fast-mode) that
+    # pi installs at runtime by spawning `npm`. Without node on PATH a clean
+    # account gets ENOENT and a broken pi (found by the 3.7
+    # disposable-account probe).
+    pkgs.nodejs
+    # tests/pi-calm.test.sh proves the Calm extension in a real TUI by
+    # driving pi inside tmux; without tmux on PATH that smoke silently
+    # skips. Bare package only - no programs.tmux module, no tmux dotfiles.
+    pkgs.tmux
+  ];
 
   home.file.".pi/agent/themes".source = authored "home/.pi/agent/themes";
   home.file.".pi/agent/extensions".source = authored "home/.pi/agent/extensions";
