@@ -250,10 +250,56 @@ does not change.
 
 ## Status
 
-Claude-executes / codex-reviews is the exercised reviewer pairing. The
-spawned executor seat is wired but not yet exercised: the
-spawned-executor plan's item 2 runs the first end-to-end exercise, and
-this section records what it proves. Flipped reviewer seats and
-multi-reviewer panels (see "Panels" and the panel addendum in ROLES.md)
-remain wired but unexercised; expect rough edges the first time and fix
-them here.
+Claude-executes / codex-reviews is the exercised pairing, including the
+spawned executor seat: exercised end to end on two real work items
+(the tmux-tui-smoke plan and the herdr-runtime-cleanup micro-plan,
+both 2026-09-13, as the spawned-executor plan's item 2). Witnessed
+across those runs: implemented exits; a validation-red caught by the
+gate before any reviewer round, with evidence handoff and a
+same-session resume to green (tmux); a blocked exit escalated to the
+human at a privilege wall, repaired by rescoping the validation line
+via `[decision]` plus a steering resume (tmux); the under-context path
+proper - the docs withheld a fact only the human could supply (the
+confirmed-stale file list), the executor walled with a `[blocker]`
+naming it and changed nothing, the human supplied it as a
+`[decision]`, and a steering resume of the same session implemented
+it (herdr); review loops and item conformance closed clean on both;
+and an orchestrator that authored none of either item's changes. Not
+yet witnessed: an abnormal exit (the classification path is untested
+live). Flipped reviewer seats and multi-reviewer panels (see "Panels"
+and the panel addendum in ROLES.md) remain wired but unexercised;
+expect rough edges the first time and fix them here.
+
+Rough edges from the exercise, filed:
+
+- Spawning `claude -p` from an orchestrator harness with permission
+  prompts: the auto-mode classifier blocked the executor spawn until a
+  `Bash(claude -p*)` allow rule was added, and the prompt had to be
+  delivered via stdin - `$(cat ...)` command substitution stayed
+  blocked. So `bypassPermissions` on the executor is not the whole
+  story; the orchestrator side needs the allow rule and stdin delivery.
+- The codex `workspace-write` sandbox cannot run nix builds (store
+  cache writes are denied), so codex reviewer and conformance seats
+  cannot reproduce build-dependent validation lines; they judge from
+  the orchestrator's gate evidence in the worklog instead.
+- ARTIFACTS.md defines no worklog type for the validation gate's
+  evidence; ad-hoc `[validation]` entries were used and read fine.
+  Candidate for a future ARTIFACTS.md addition.
+- A `bypassPermissions` executor can out-engineer an intended
+  under-context wall: given docs that omitted the needed rebuild, it
+  built the target system itself with `--override-input` instead of
+  stalling, and the wall arrived one round late at the sudo boundary.
+  What the tmux run therefore tested is the permission wall (blocked
+  exit at missing privilege), not under-context; a derivable fact is
+  no probe for an executor with full exec. The under-context evidence
+  came from the herdr run, whose withheld fact was a human judgment
+  (which files are stale) that no amount of privilege could derive.
+- `claude -p` reports its session id only at exit, so the `[session]`
+  id entry always lands post-invocation - as the session-record note
+  above states; observed, not just predicted.
+- The orchestrator wrote `[done]` for the tmux item's review-loop and
+  conformance completions while the commit was still pending, against
+  ARTIFACTS.md's committed-only meaning; both entries are superseded
+  by an append-only `[decision]` in that worklog. Pre-commit
+  milestones take `[handoff]` (or the entry type of the event itself);
+  `[done]` is reserved for landed work.
