@@ -11,7 +11,8 @@ Arguments (ask for whatever is missing rather than guessing):
 
 - plan name.
 - plan directory: default `docs/plans/<plan_name_slug>/`.
-- reviewer profile: default `codex`; must be a different LLM from you.
+- design-review reviewer profile: default `codex`; must be a different
+  LLM from you (you edit the plan in that loop).
 
 Steps:
 
@@ -21,7 +22,11 @@ Steps:
    scope in and out, constraints, dependencies, risks, deadlines,
    success criteria. Up to 4 questions per round, as many rounds as it
    takes; do not rush this. "Whatever you think is best" gets your
-   recommendation and their explicit confirmation. Every decision lands
+   recommendation and their explicit confirmation. Also ask which
+   executor and implementation-reviewer profiles the plan's items will
+   use (defaults: executor `claude`, reviewer `codex`; never the same
+   LLM as each other) - they are recorded in the Decisions table, where
+   plan-implement and plan-item-review read them. Every decision lands
    in plan.md's Decisions table and is final.
 2. **Draft** `plan.md` (status: draft) and `breakdown.md` per
    ARTIFACTS.md. Architecture level: what and why, not how.

@@ -7,17 +7,22 @@ defined in `~/.config/plan-skills/PROTOCOL.md`. Read that file,
 now, then follow them exactly.
 
 You need from the arguments or the user: the plan name, the plan
-directory (default `docs/plans/<plan_name_slug>/`), and the reviewer
-profile (must be a different LLM from you: default `claude`, per the
-protocol's profile table). Ask for whatever is missing rather than
-guessing.
+directory (default `docs/plans/<plan_name_slug>/`), and the
+design-review reviewer profile (must be a different LLM from you, since
+you edit the plan in that loop: default `claude`, per the protocol's
+profile table). Ask for whatever is missing rather than guessing.
 
 The steps: interview the user until every ambiguity is resolved (intent,
 existing context pointers, scope in and out, constraints, dependencies,
 risks, deadlines, success criteria) - up to 4 questions per round, as
 many rounds as it takes, and "whatever you think is best" gets your
 recommendation plus the user's explicit confirmation, never a silent
-choice; every decision lands in plan.md's Decisions table and is final.
+choice; the interview also asks which executor and
+implementation-reviewer profiles the plan's items will use (defaults:
+executor `claude`, reviewer `codex`; never the same LLM as each other),
+recorded in the Decisions table where plan-implement and
+plan-item-review read them; every decision lands in plan.md's Decisions
+table and is final.
 Then draft plan.md and breakdown.md per
 ARTIFACTS.md at architecture level; run the design review loop per
 PROTOCOL.md ("The design review") with the design-review templates and

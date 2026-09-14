@@ -1,9 +1,11 @@
 # plan-skills protocol
 
 A review loop between AI agents that never talk to each other directly.
-All communication goes through one markdown review file the human can audit
-at any point. The plan documents, not anyone's session memory, are the
-source of truth for what the work should be.
+All communication goes through markdown files the human can audit at
+any point: the review file carries review items and responses, the
+worklog carries executor outcomes, session records, validation
+evidence, and human steering. The plan documents, not anyone's session
+memory, are the source of truth for what the work should be.
 
 The plan-* family shares this protocol: `plan-create` (interview, draft,
 design review, human sign-off), `plan-implement` (the next work item),
@@ -16,27 +18,47 @@ defined in ARTIFACTS.md.
 
 ## Seats
 
-- **Orchestrator**: the agent the human is talking to. Drives the loop,
-  spawns the other seats as fresh CLI processes (profiles below), and
-  pauses for the human at the marked points. By default it doubles as
-  executor.
-- **Executor**: does the work. Addresses review items by fixing the work,
-  then appending a response under each item. Never marks an item closed.
+- **Orchestrator**: the agent the human is talking to. Drives the
+  loops, spawns the other seats as fresh CLI processes (profiles
+  below), and pauses for the human at the marked points. In the
+  implementation loops it implements nothing: its own writes are
+  filled role prompts, worklog `[session]`/`[decision]`/
+  validation-evidence entries, and reports to the human - it reads the
+  diff and worklog to judge and report, but authors no part of the
+  work. The one exception is plan-create's design review, where the
+  orchestrator edits the plan documents itself.
+- **Executor**: a spawned seat that does the work (see "The executor
+  seat"). Implements items from the plan documents alone, addresses
+  review items by fixing the work then appending a response under each
+  item. Never marks an item closed, never commits.
 - **Reviewer**: judges the work against the plan docs. Writes the review
   checklist, verifies fixes, and is the only seat that closes items.
 
 Hard rules, regardless of who fills which seat:
 
-- Reviewer and executor are never the same agent session, and never the
-  same underlying LLM. Before starting, the orchestrator establishes
-  which model fills each seat (including its own, when it doubles as
-  executor, and every panel member's) and stops to ask the human if a
-  selection would put the same model in both seats.
-- The reviewer receives ONLY its role prompt with the placeholders filled:
-  plan doc paths, the review file path, the working tree. Never the
-  executor's or orchestrator's session context, summaries, or chat. The
-  executor's case lives in the review file responses or nowhere.
-- No seat communicates with another except through the review file.
+- In the implementation loops (plan-implement, plan-item-review):
+  executor-LLM != reviewer-LLM, checked at spawn time; the
+  orchestrator's own model is irrelevant there because it executes
+  nothing. In the design review the orchestrator edits the plan, so
+  the reviewer must be a different LLM from the orchestrator - that
+  rule is unchanged. A profile selection that would break either rule
+  stops for the human.
+- Executor and implementation-reviewer profiles are recorded in
+  plan.md's Decisions table at plan-create time; any invocation may
+  override per run. A mid-item override that changes the executor LLM
+  cannot resume the old CLI's session: it forces a fresh spawn,
+  recorded as a worklog `[decision]`. Plans without recorded profiles
+  fall back to the defaults - executor `claude`, reviewer `codex` -
+  stated by the orchestrator at spawn time.
+- A spawned seat receives ONLY its role prompt with the placeholders
+  filled: for the reviewer, the plan doc paths and review file; for the
+  executor, the work item, plan doc paths, review file, and worklog.
+  Never anyone's session context, summaries, or chat. The executor's
+  case lives in the review file responses or nowhere; a floundering
+  executor is evidence of a plan-doc gap, and the fix goes into the
+  plan documents, not the prompt.
+- No seat communicates with another except through the review file and
+  the worklog.
 - The human gates everything at the pause points and owns commits.
 
 ## The review file
@@ -51,20 +73,91 @@ Hard rules, regardless of who fills which seat:
   closing or rebutting.
 - The raw stdout of each reviewer/executor invocation is captured to a log
   file outside the repo (orchestrator picks a temp path and reports it).
-  The review file stays the only channel of record.
+  The review file stays the channel of record for review items and
+  responses; the worklog is the channel of record for everything else
+  (outcomes, sessions, evidence, steering).
+
+## The executor seat (plan-implement)
+
+The orchestrator spawns the executor as a fresh CLI process with the
+`executor` template, then judges the outcome from files only - the
+diff and the worklog tail - never by tailing live output.
+
+- **Session record**: `[session]` entries come in pairs. Immediately
+  before every spawn AND every resume, the orchestrator appends the
+  boundary entry - item, seat, profile, invocation number - which is
+  the classification boundary below. When the CLI reports the session
+  id, the orchestrator appends the id entry - invocation number,
+  session id - which is the resume pointer (a separately-invoked
+  plan-item-review resumes from the item's latest id entry). Codex
+  prints its thread id on the first stdout line, so the id entry can
+  land while the seat still runs; `claude -p` reports it in the JSON
+  result at exit. A boundary with no id entry (a crash before the id
+  was reported) has no resumable session: recovery is a fresh spawn.
+- **Exit classification**, per invocation, from terminal entries the
+  executor wrote after the latest `[session]` boundary - older entries
+  are history and never classify a later invocation:
+  - **implemented**: an `[implemented]` entry after the boundary; run
+    the validation gate.
+  - **blocked**: a `[blocker]` entry after the boundary; goes to the
+    human, never auto-resumed. Both kinds after the boundary is a
+    conflict, treated as blocked.
+  - **abnormal**: no terminal entry after the boundary; the
+    orchestrator appends a `[blocker]` on the executor's behalf
+    recording the abnormal termination and goes to the human. A fresh
+    spawn happens only on the human's go.
+- **Validation gate**: after an implemented exit, run the breakdown
+  item's validation line. Red: append the failing command and trimmed
+  output to the worklog, then resume the executor with the
+  `executor-resume-validation` template pointing at that entry - the
+  template stays the only channel. Three validation-red resumes on one
+  item without green is an escalation to the human. Validation lines
+  marked `human:` are for the human at the pause point and never
+  trigger an executor round.
+- **Steering**: human input flows between rounds only, recorded as a
+  worklog `[decision]`; the executor session is resumed with the
+  `executor-resume-steering` template pointing at it - the template
+  for continuing after a `[decision]` resolves a blocker or redirects
+  the work, including the doc-gap path (blocker, docs repaired,
+  resume). An urgent
+  stop is the human interrupting the orchestrator, which kills the
+  executor's entire process tree (the CLI and any build or test
+  children it spawned), confirms nothing from that tree survives
+  before anything else may write to the tree, and records why as a
+  `[decision]`.
+- **Resume vs fresh**: validation-red and ADDRESS rounds resume the
+  same executor session. A fresh spawn happens only when the session
+  is lost or the executor profile changed, and it uses the full
+  `executor` template, whose opening reconciliation rule makes it
+  pick up partial work from what the tree, review file, and worklog
+  already show - the strict-context rule is what makes that
+  sufficient.
+- **Every invocation terminates in the worklog**: fresh spawns and
+  resumes alike end with a terminal entry (`[implemented]` or
+  `[blocker]`) after their boundary, so classification works the same
+  in every round - including ADDRESS.
 
 ## The loop (plan-item-review)
 
 1. **REVIEW**: orchestrator spawns the reviewer with the `review-initial`
    template. Reviewer writes the review file.
 2. **PAUSE**: orchestrator summarizes the review to the human and waits.
-3. **ADDRESS**: executor fixes and responds to every open item.
-4. **VERIFY**: orchestrator resumes the same reviewer session with the
+3. **ADDRESS**: orchestrator resumes the executor session (the item's
+   latest `[session]` id entry) with the `executor-address` template;
+   the executor fixes and responds to every open item.
+4. **GATE**: before any reviewer round is spent, the orchestrator
+   classifies the ADDRESS invocation's exit per "The executor seat"
+   (blocked and abnormal go to the human) and re-runs the item's
+   validation line - after every implemented exit, unconditionally;
+   red follows the validation gate (evidence, resume, cap), not the
+   review loop. Only an implemented exit with green validation
+   proceeds.
+5. **VERIFY**: orchestrator resumes the same reviewer session with the
    `review-verify` template. Reviewer closes what is adequately addressed,
    may add new items for problems the fixes introduced.
-5. Back to 2. An item still open after 3 verify rounds is a genuine
+6. Back to 2. An item still open after 3 verify rounds is a genuine
    disagreement: stop, tag it `[escalated]`, and hand it to the human.
-6. When every item is closed, run `plan-conformance-pass` for the work
+7. When every item is closed, run `plan-conformance-pass` for the work
    item as the terminal gate.
 
 The reviewer session is resumed (not fresh) across rounds of one work
@@ -89,10 +182,16 @@ the item loop: the templates are `design-review` / `design-review-verify`;
 the review file is `plan_review.md` in the plan directory; and the source
 of truth is the Intent and Decisions sections of the plan under review,
 since no other document outranks it yet. The orchestrator is the executor
-and addresses items by editing the plan documents. The loop's rules
-(pause points, resumed reviewer session, round cap, sole-closer) apply
-unchanged, with one exception: there is no conformance gate, because
-nothing has been delivered yet - step 6 of the item loop does not apply.
+and addresses items by editing the plan documents - the one place it
+still edits anything, so the executor seat's machinery does not apply
+here: no spawned seat, no `[session]` entries, no exit classification,
+and no GATE step (step 4), since there is no ADDRESS invocation to
+classify and the draft breakdown's validation lines describe work not
+yet implemented; the loop proceeds from plan edits straight to VERIFY.
+The loop's other rules (pause points, resumed reviewer session, round
+cap, sole-closer) apply unchanged, with one more exception: there is no
+conformance gate, because nothing has been delivered yet - step 7 of
+the item loop does not apply.
 When the design checklist closes, what follows is the human's own review
 and sign-off (ARTIFACTS.md, "Approval gate"); the loop informs the
 sign-off, never replaces it.
@@ -127,14 +226,23 @@ codex-cli 0.153.4 and claude code. Run from the repo root.
   confined to the repo tree); the role prompt confines writes further to
   the review file. Reviewer seats never need more; never pass
   `--dangerously-bypass-approvals-and-sandbox`.
+- Executor seat: the same commands and grant - `workspace-write` is
+  already full write + exec within the tree, which is what an executor
+  needs.
 
 ### claude
 
-- New session:
+- New session (reviewer seats):
   `claude -p --permission-mode acceptEdits --output-format json "<prompt>"`
 - Session id: `session_id` field of the JSON result.
 - Resume: `claude -p --resume <session-id> --permission-mode acceptEdits --output-format json "<prompt>"`
 - Model override: `--model <model>` (profile name `claude:<model>`).
+- Executor seat: `--permission-mode bypassPermissions` in place of
+  `acceptEdits`, new session and resume alike. Named honestly: the
+  executor edits files and runs builds and tests headless, where
+  permission prompts cannot be answered; the audit trail is the diff
+  plus the worklog, and nothing is committed without the human.
+  Reviewer seats keep `acceptEdits`.
 
 Adding a profile for another agent CLI means adding a section here: a new
 command, a resume command, and where its session id lives. The protocol
@@ -142,7 +250,10 @@ does not change.
 
 ## Status
 
-Claude-executes / codex-reviews is the exercised path. The flipped seats
-(codex executes via its adapter, claude reviews) and multi-reviewer
-panels (see "Panels" and the panel addendum in ROLES.md) are wired but
-not yet exercised; expect rough edges the first time and fix them here.
+Claude-executes / codex-reviews is the exercised reviewer pairing. The
+spawned executor seat is wired but not yet exercised: the
+spawned-executor plan's item 2 runs the first end-to-end exercise, and
+this section records what it proves. Flipped reviewer seats and
+multi-reviewer panels (see "Panels" and the panel addendum in ROLES.md)
+remain wired but unexercised; expect rough edges the first time and fix
+them here.

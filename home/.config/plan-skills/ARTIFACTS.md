@@ -70,7 +70,17 @@ Drafting rules:
 Append-only, chronological. One entry per line or short block:
 `- YYYY-MM-DD [type] ...`. Types:
 
-- `[done]` - an item landed: commits, how it was verified.
+- `[done]` - an item landed: commits, how it was verified. Only an
+  existing commit earns this entry.
+- `[implemented]` - the executor finished an item pre-review: what
+  changed, how it was verified locally. Distinct from `[done]` so the
+  audit trail separates executor completion from delivered work.
+- `[session]` - a seat spawn or resume record, written by the
+  orchestrator as a pair: a boundary entry immediately before the
+  spawn (item, seat, profile, invocation number - the executor
+  exit-classification boundary) and an id entry once the CLI reports
+  the session id (invocation number, session id - the resume pointer).
+  See PROTOCOL.md, "The executor seat".
 - `[decision]` - a decision made or changed after the plan was written,
   with rationale. Supersede by appending a new entry that references the
   old one; never edit or delete old entries.
