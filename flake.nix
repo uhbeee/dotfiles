@@ -20,10 +20,6 @@
 
   outputs = inputs@{ self, nix-darwin, nixpkgs, nixpkgs-unstable, nix-homebrew, home-manager }:
     let
-      # The one username line to change if this isn't your machine.
-      # bootstrap.sh offers to rewrite this for you if your macOS username differs.
-      user = "adasari";
-
       # Pi moves faster than the stable channel. nixpkgs-26.05-darwin is frozen
       # at 0.75.4, below the 0.82.0 that settings.json's package pins need to
       # install themselves. Take this one package from unstable; everything else
@@ -34,36 +30,12 @@
       };
     in
     {
-      darwinConfigurations."mac" = nix-darwin.lib.darwinSystem {
-        specialArgs = { inherit user; };
-        modules = [
-          ./configuration.nix
-          nix-homebrew.darwinModules.nix-homebrew
-          home-manager.darwinModules.home-manager
-          {
-            nixpkgs.overlays = [ piOverlay ];
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = { inherit user; };
-            # Identity is this machine's, so it lives here with the machine,
-            # not in the exported home.nix.
-            home-manager.users.${user} = {
-              imports = [ ./home.nix ];
-              home.username = user;
-              home.homeDirectory = "/Users/${user}";
-              home.stateVersion = "24.11";
-              # This machine develops the library: authored configs link into
-              # the checkout and are editable in place. Consumers leave this
-              # unset and get everything read-only from the store.
-              dotfiles.devCheckout = "/Users/${user}/.dotfiles";
-            };
-          }
-        ];
-      };
-
-      # Consumer-facing outputs. Additive: the Mac above still builds from its
-      # own wiring; these make the same modules importable by a machines repo
-      # (scaffold one with `nix flake init -t <this-flake>#machine`).
+      # This flake describes no machine and no person: it only exports the
+      # library. Machines live in a separate private repo that consumes these
+      # outputs (scaffold one with `nix flake init -t <this-flake>#machine`).
+      # nix-darwin and home-manager are inputs even though no output here
+      # builds with them: consumers `follows` them from this flake, so it
+      # stays the single point that pins what the library is tested against.
 
       # The home module tree: shell, editor, CLI, prompt, agents.
       homeManagerModules.default = ./home.nix;
@@ -75,8 +47,7 @@
           nix-homebrew.darwinModules.nix-homebrew
           ./modules/system/darwin/defaults.nix
           ./modules/system/darwin/homebrew.nix
-          # The restart that makes screencapture.location take effect; see the
-          # note in that file for why configuration.nix has its own copy.
+          # The restart that makes screencapture.location take effect.
           ./modules/system/darwin/screencapture-restart.nix
         ];
       };

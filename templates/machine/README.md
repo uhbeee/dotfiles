@@ -18,13 +18,56 @@ either repo.
   `stateVersion`, and anything true of that machine and nothing else.
 
 First step: edit `flake.nix` and point `dotfiles.url` at the real library,
-then rename and fill in `machines/example.nix` for your first machine.
+then write your first machine file ("First install" below walks through it).
 
 ## First install
 
-On a Mac, install [Determinate Nix](https://determinate.systems) first (the
-compositions here assume it: `nix.enable = false` leaves the daemon to it),
-then, in this repo:
+Order matters on a bare machine: this repo must arrive before any
+configuration can install the tools that make arriving easy.
+
+1. **Get this repo.** If it is private, none of your usual credentials
+   exist yet: create a fine-grained personal access token in the GitHub
+   web UI (contents: read) and clone over HTTPS, pasting the token as
+   the password. `gh` arrives with the first switch below; run
+   `gh auth login` afterwards and its credential helper takes over from
+   the throwaway token.
+
+2. **Install [Determinate Nix](https://determinate.systems)** (the
+   compositions here assume it: `nix.enable = false` leaves the daemon
+   to it):
+
+   ```sh
+   curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix \
+     | sh -s -- install --no-confirm
+   ```
+
+   Then open a new terminal so `nix` is on PATH.
+
+3. **Git identity.** The library keeps identity out of both repos: git
+   includes `~/.gitconfig.local` at runtime. Write it before your first
+   commit:
+
+   ```ini
+   # ~/.gitconfig.local - machine-local, never committed anywhere
+   [user]
+       name = Your Name
+       email = you@example.com
+   ```
+
+4. **Describe the machine**: copy an existing machine file (a fresh
+   scaffold ships `machines/example.nix`; a lived-in repo has one per
+   machine) to `machines/<host>.nix`, answer its questions, and point
+   `flake.nix`'s `machine =` line at it.
+
+5. **Library checkout, only if the machine file sets
+   `dotfiles.devCheckout`.** That option makes every authored config
+   link point into a local checkout of the library, so the checkout
+   (and any symlink the configured path goes through) must exist before
+   the first switch or the links dangle. Clone the library to that path
+   now. Machines that omit the option need no checkout: they get
+   read-only files from the nix store, the default.
+
+Then, in this repo:
 
 ```sh
 git init && git add -A     # flakes only see tracked files
@@ -33,8 +76,11 @@ nix flake lock             # write flake.lock, unprivileged
 # Whole Mac: build unprivileged first, then switch as root using the
 # darwin-rebuild this flake locked - not whatever the registry resolves today.
 nix build .#darwinConfigurations.<host>.system
+shasum flake.lock > /tmp/lock.sum
 sudo ./result/sw/bin/darwin-rebuild switch --flake .#<host> --no-update-lock-file
 readlink /run/current-system   # must print the same path as: readlink ./result
+shasum -c /tmp/lock.sum        # lock contents unchanged by root
+stat -f '%Su' flake.lock       # still owned by you, not root
 
 # Home directory only:
 nix build .#homeConfigurations."<user>@<host>".activationPackage
@@ -44,9 +90,12 @@ nix build .#homeConfigurations."<user>@<host>".activationPackage
 `darwin-rebuild switch` re-evaluates the flake as root. `--no-update-lock-file`
 only keeps root from rewriting `flake.lock`; nothing freezes the source files,
 so do not edit the checkout or the lock between the build and the switch. The
-`readlink` comparison at the end is what verifies you held to that: it proves
-root activated exactly the prebuilt system rather than a fresh one. Keep all
-three parts of the pattern on every switch.
+checks at the end verify you held to that: the `readlink` comparison proves
+root activated exactly the prebuilt system rather than a fresh one, the
+checksum proves the lock's *contents* survived, and the ownership check proves
+root did not take the file over (ownership and content are separate
+properties; a root-owned lock breaks the next unprivileged `nix flake lock`).
+Keep every part of the pattern on every switch.
 
 After a darwin switch, the pinned `darwin-rebuild` lives in the activated
 system at `/run/current-system/sw/bin`. The standalone composition installs
@@ -62,10 +111,13 @@ known-good baseline.
 ```sh
 nix flake update dotfiles   # unprivileged; rewrites flake.lock
 
-# Whole Mac:
+# Whole Mac: same switch pattern as the first install, all checks included.
 nix build .#darwinConfigurations.<host>.system
+shasum flake.lock > /tmp/lock.sum
 sudo ./result/sw/bin/darwin-rebuild switch --flake .#<host> --no-update-lock-file
 readlink /run/current-system   # matches readlink ./result
+shasum -c /tmp/lock.sum        # lock contents unchanged by root
+stat -f '%Su' flake.lock       # still owned by you
 
 # Standalone home directory:
 nix build .#homeConfigurations."<user>@<host>".activationPackage
@@ -106,8 +158,11 @@ prebuild and switch the restored inputs like any other change:
 git log --oneline -- flake.lock          # find the last good rebuild's commit
 git checkout <good-commit> -- flake.lock
 nix build .#darwinConfigurations.<host>.system
+shasum flake.lock > /tmp/lock.sum
 sudo ./result/sw/bin/darwin-rebuild switch --flake .#<host> --no-update-lock-file
 readlink /run/current-system   # matches readlink ./result
+shasum -c /tmp/lock.sum        # lock contents unchanged by root
+stat -f '%Su' flake.lock       # still owned by you
 ```
 
 ## Diverging from the library

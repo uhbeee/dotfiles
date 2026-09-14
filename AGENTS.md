@@ -1,7 +1,10 @@
 # Project notes for agents
 
-This repo is the single source of truth for a Mac's configuration. `rebuild.sh`
-applies it; `bootstrap.sh` takes a bare machine to that point.
+This repo is a preference library: it exports home-manager and nix-darwin
+modules and describes no machine and no person. Machines live in a separate
+private machines repo that consumes these outputs (scaffold:
+`nix flake init -t <this-flake>#machine`); rebuilds run from there. The
+template's README owns first-install, update and recovery.
 
 ## Governing principle: user and device agnostic
 
@@ -22,24 +25,13 @@ Git identity is handled: `home.nix` sets `programs.git.includes` to
 `~/.gitconfig.local`, so git resolves the identity at runtime and Nix never
 reads it. Do not reintroduce `programs.git.settings.user` here.
 
-One exception remains: `user` in `flake.nix`. Nix needs the username at
-evaluation time, and **flakes only see git-tracked files**, so it cannot come
-from an untracked `local.nix` - that was verified, not assumed, and the file is
-simply absent from the flake's store copy. `bootstrap.sh` rewrites the line to
-match whoever runs it; the cross-platform migration moves it into per-machine
-host files so shared config carries no username.
-
 ## Other deliberate decisions - do NOT silently revert them
 
-- `homebrew.onActivation.cleanup = "zap"` in `configuration.nix` is intentional.
+- `homebrew.onActivation.cleanup = "zap"` in `modules/system/darwin/homebrew.nix`
+  is intentional.
   It forces every Homebrew package to be declared in the Nix config instead of
   installed ad-hoc, which is what keeps the machine reproducible. Do not soften
   it to `uninstall` or `none`.
-- The username is threaded from a single point via `specialArgs`, never
-  hardcoded in more than one place. Under the governing principle above it
-  should ultimately not be committed at all; until then, one definition only.
-- The host label `"mac"` appears in `flake.nix`, `rebuild.sh` and `bootstrap.sh`.
-  All three have to agree.
 - `o.mouse = ''` in `home/.config/nvim/lua/vim_config.lua` is set so Herdr can
   leave host mouse capture off and Escape isn't swallowed. It is not an oversight.
 - `homebrew.masApps` is deliberately unused. The activation runs brew bundle via
@@ -53,10 +45,13 @@ host files so shared config carries no username.
 
 Authored config under `home/` is store-managed and read-only by default; the
 `dotfiles.devCheckout` option flips every authored link to edit-in-place via
-`mkOutOfStoreSymlink` (see `modules/home/common/options.nix`). This machine
-sets it in `flake.nix`, so files under `home/` are still edited here directly
-and take effect without a rebuild. Adding a *new* symlink still needs a
-rebuild, and consumers without the option get the store path.
+`mkOutOfStoreSymlink` (see `modules/home/common/options.nix`). The option is
+set - like all identity - in the consuming machines repo's machine file, never
+here. When a machine sets it to a local checkout of this repo, files under
+`home/` are edited there directly and take effect without a rebuild; adding a
+*new* symlink still needs a rebuild (from the machines repo), and consumers
+without the option get the store path. Do not assume the checkout you are
+working in is live-linked: that depends on the machine's setting.
 
 Secrets and runtime state never belong in this repo. `gh`'s token lives in
 `~/.config/gh/hosts.yml`, which is deliberately unmanaged, and herdr's logs,
