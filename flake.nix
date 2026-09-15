@@ -52,6 +52,13 @@
         ];
       };
 
+      # Linux system preferences. The base is deliberately small; plain
+      # GNOME is a separate importable module because a desktop is a host
+      # decision, not a profile one - the home profile has no existence in
+      # the NixOS module system.
+      nixosModules.default = ./modules/system/nixos/base.nix;
+      nixosModules.gnome = ./modules/system/nixos/gnome.nix;
+
       # The pinned-package overlay, so consumers get the same Pi the library
       # tests against.
       overlays.default = piOverlay;
@@ -62,7 +69,7 @@
 
       templates.machine = {
         path = ./templates/machine;
-        description = "A machines repo consuming this library: a flake with the standalone home-manager and darwin compositions, an example machine file, and the install/update/recovery runbook.";
+        description = "A machines repo consuming this library: a flake with the standalone home-manager, darwin and NixOS compositions, example machine files, and the install/update/recovery runbook.";
       };
     };
 }

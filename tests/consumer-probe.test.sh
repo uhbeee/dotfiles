@@ -270,4 +270,65 @@ else
   bad "freya: linux full eval failed"
 fi
 
+# Agent CLI sourcing (phase 8's absorbed 7.2 work): the cc/co aliases need
+# `claude` and `codex` on PATH. Linux consumers get both from nixpkgs
+# (agent-clis.nix); darwin consumers must NOT - the Homebrew casks own
+# them there. Eval-only, so it holds on any runner.
+check_agent_clis() { # check_agent_clis <config> <want-json> <label>
+  local got
+  if ! got="$(cd "$probe" && nix eval --json --impure \
+      ".#homeConfigurations.$1.config.home.packages" --apply 'ps:
+        let names = map (p: p.pname or p.name or "") ps; in {
+          cc = builtins.elem "claude-code" names;
+          co = builtins.elem "codex" names;
+        }')"; then
+    bad "$1: agent CLI package eval failed"
+    return
+  fi
+  if [ "$got" = "$2" ]; then ok "$1: $3"; else bad "$1: $3 - got $got"; fi
+}
+check_agent_clis freya '{"cc":true,"co":true}' \
+  "linux consumer sources claude-code and codex from nixpkgs"
+check_agent_clis delia '{"cc":false,"co":false}' \
+  "darwin consumer leaves claude/codex to the casks"
+
+# The NixOS composition (phase 8): scaffold the shipped template for real
+# and evaluate its NixOS variant against the git-sourced library - the
+# same eval a consumer's `nixos-rebuild` would start from. Building needs
+# a Linux builder (item 7); evaluation pins down the module wiring now.
+tpl="$(mktemp -d)"
+trap 'rm -rf "$probe" "$tpl"' EXIT
+if (cd "$tpl" && nix flake init -t "$LIB#machine" >/dev/null 2>&1) \
+    && sed "s|github:CHANGE-ME/dotfiles|git+file://$LIB|" "$tpl/flake.nix" > "$tpl/flake.nix.new" \
+    && mv "$tpl/flake.nix.new" "$tpl/flake.nix"; then
+  ok "template scaffolds via nix flake init"
+else
+  bad "template scaffold failed"
+fi
+if nixos="$(cd "$tpl" && nix eval --json \
+    ".#nixosConfigurations.example-nixos.config" --apply 'c: {
+      toplevel = builtins.isString c.system.build.toplevel.drvPath;
+      # nixos-anywhere needs the disko install attributes, not just the
+      # system: a template without them documents an install it cannot do.
+      disko = builtins.isString c.system.build.diskoScript.drvPath;
+      gdm = c.services.displayManager.gdm.enable;
+      gnome = c.services.desktopManager.gnome.enable;
+      wezterm = builtins.any (p: (p.pname or "") == "wezterm")
+        c.environment.systemPackages;
+      zsh = c.programs.zsh.enable;
+      flakes = builtins.elem "flakes" c.nix.settings.experimental-features;
+      # The README fresh-install path reconnects over ssh post-install;
+      # the shipped host must actually serve it.
+      sshd = c.services.openssh.enable;
+    }')"; then
+  want='{"disko":true,"flakes":true,"gdm":true,"gnome":true,"sshd":true,"toplevel":true,"wezterm":true,"zsh":true}'
+  if [ "$nixos" = "$want" ]; then
+    ok "template nixos variant evaluates: disko install attrs, gnome desktop, sshd, wezterm, zsh, flakes"
+  else
+    bad "template nixos variant mismatch: got $nixos, want $want"
+  fi
+else
+  bad "template nixos variant eval failed"
+fi
+
 exit $fail

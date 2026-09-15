@@ -37,6 +37,7 @@
     ./modules/home/common/agents.nix
     ./modules/home/common/plan-skills.nix
     ./modules/home/common/pi.nix
+    ./modules/home/common/agent-clis.nix
     ./modules/home/common/claude.nix
     ./modules/home/common/wezterm.nix
     ./modules/home/darwin/herdr.nix

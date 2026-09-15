@@ -10,9 +10,14 @@
     home-manager.follows = "dotfiles/home-manager";
     # Only the darwin composition below needs this one.
     nix-darwin.follows = "dotfiles/nix-darwin";
+    # Declarative disk layout for NixOS machines; nixos-anywhere applies it
+    # at install time. A machine concern, so it is this repo's input, never
+    # the library's.
+    disko.url = "github:nix-community/disko/latest";
+    disko.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, dotfiles, nixpkgs, home-manager, nix-darwin, ... }:
+  outputs = { self, dotfiles, nixpkgs, home-manager, nix-darwin, disko, ... }:
     let
       # One file per machine; see machines/README notes in README.md.
       machine = import ./machines/example.nix;
@@ -76,6 +81,29 @@
               home.stateVersion = machine.stateVersion;
               dotfiles.profile = machine.profile;
             };
+          }
+        ];
+      };
+
+      # Composition three: NixOS owning a whole machine, with home-manager
+      # inside it. The host is a directory module (machines/example-nixos/),
+      # not a question-file: a NixOS host also answers hardware and disk
+      # questions, which no attrset covers. Scaffold a real machine by
+      # copying the directory and renaming this output. Apply on the machine:
+      #   sudo nixos-rebuild switch --flake .#example-nixos
+      nixosConfigurations.example-nixos = nixpkgs.lib.nixosSystem {
+        # Lets the host module import the library's home module for its user.
+        specialArgs = { inherit dotfiles; };
+        modules = [
+          dotfiles.nixosModules.default
+          # A desktop is a host decision: drop this line for a server.
+          dotfiles.nixosModules.gnome
+          disko.nixosModules.disko
+          home-manager.nixosModules.home-manager
+          ./machines/example-nixos
+          {
+            nixpkgs.overlays = [ dotfiles.overlays.default ];
+            nixpkgs.config.allowUnfree = true;
           }
         ];
       };

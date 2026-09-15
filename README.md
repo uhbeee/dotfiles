@@ -85,6 +85,11 @@ edit-in-place links instead of store files. The outputs:
 
 - `homeManagerModules.default` - shell, editor, CLI, prompt, agents
 - `darwinModules.default` - the macOS system preferences, self-contained
+- `nixosModules.default` - the NixOS system base (flakes enabled, zsh
+  system-side), deliberately small
+- `nixosModules.gnome` - plain GNOME plus the WezTerm app, separately
+  importable: whether a host gets a desktop is the host file's decision,
+  never the home profile's
 - `overlays.default` - the pinned-package overlay (Pi), so consumers build
   the same versions this repo tests against
 - `lib.basePackages` - the package list as data, a function of `pkgs`;
@@ -93,17 +98,22 @@ edit-in-place links instead of store files. The outputs:
 
 Already have a machines repo? Add `dotfiles` as an input with
 `nixpkgs.follows`/`home-manager.follows`, import the module, write the machine
-file. Starting from nothing:
+file. A NixOS machine imports `nixosModules.default` (plus `nixosModules.gnome`
+for a desktop) alongside home-manager's NixOS module, with the host directory
+owning identity, hardware and disk layout - the template's
+`nixosConfigurations` output shows the exact wiring. Starting from nothing:
 
 ```sh
 mkdir machines && cd machines
 nix flake init -t github:uhbeee/dotfiles#machine
 ```
 
-The scaffold ships both target compositions (standalone home-manager, and
-nix-darwin with home-manager inside), an example machine file, and the
-install/update/recovery runbook. The per-machine convention is documented
-there, next to the files it governs.
+The scaffold ships all three target compositions (standalone home-manager,
+nix-darwin with home-manager inside, and NixOS with home-manager inside),
+example machine files, and the install/update/recovery runbook - including
+the nixos-anywhere fresh-install path with a declarative disko disk layout.
+The per-machine convention is documented there, next to the files it
+governs.
 
 ## Before you run it
 

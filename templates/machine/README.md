@@ -9,13 +9,19 @@ either repo.
 ## Layout
 
 - `flake.nix` binds this repo to the library and defines one output per
-  machine, in two compositions:
+  machine, in three compositions:
   - `homeConfigurations."<user>@<host>"` - standalone home-manager, for any
     machine where you own the home directory but not the OS.
   - `darwinConfigurations.<host>` - nix-darwin owning a whole Mac, with
     home-manager inside it.
+  - `nixosConfigurations.<host>` - NixOS owning a whole machine, with
+    home-manager inside it.
 - `machines/<host>.nix` - one file per machine. Identity, platform,
   `stateVersion`, and anything true of that machine and nothing else.
+- `machines/<host>/` - a NixOS machine is a directory module instead: it
+  also answers hardware and disk questions (`hardware-configuration.nix`),
+  which no question-file covers. The scaffold ships
+  `machines/example-nixos/` to copy.
 
 First step: edit `flake.nix` and point `dotfiles.url` at the real library,
 then write your first machine file ("First install" below walks through it).
@@ -105,6 +111,56 @@ PATH.
 
 Commit `flake.lock` once the first switch succeeds. That commit is your
 known-good baseline.
+
+### NixOS machines
+
+A NixOS machine starts from `machines/example-nixos/`: copy the directory,
+answer its questions, rename the `nixosConfigurations` output. Two ways in:
+
+- **Machine not yet installed:** drive the install from another machine
+  with [nixos-anywhere](https://github.com/nix-community/nixos-anywhere)
+  against the booted installer ISO. The scaffold already carries what it
+  needs: the disko module is imported in `flake.nix`, and
+  `machines/<host>/disko.nix` declares the disk layout - set its `device`
+  to the real disk first (that disk is wiped). Then, with the target
+  booted from the ISO, root ssh reachable, and this repo's changes
+  committed:
+
+  ```sh
+  nix run github:nix-community/nixos-anywhere -- \
+    --flake .#<host> \
+    --generate-hardware-config nixos-generate-config machines/<host>/hardware-configuration.nix \
+    root@<target-ip>
+  ```
+
+  The `--generate-hardware-config` flag writes the real hardware config
+  before the system closure is built (drivers in the first boot, not
+  retrofitted); commit that file afterwards - hardware facts belong in
+  this repo. Add `--build-on-remote` if the driving machine cannot build
+  for the target's architecture. Note the installed system generates
+  fresh ssh host keys, so drop the installer's entry afterwards
+  (`ssh-keygen -R <target-ip>`) and verify the new fingerprint at the
+  machine's console (`ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub`)
+  when first connecting. That reconnect works because the example host
+  enables `services.openssh`, with authentication yours to own: paste
+  your public key into the host's commented `authorizedKeys` line, or
+  rely on the initial password over a trusted network until you change
+  it. A console-only machine drops the `services.openssh` block and
+  skips the reconnect step.
+- **Already running NixOS:** remove `disko.nix` and its import, replace
+  the placeholder `hardware-configuration.nix` with the machine's own
+  (`nixos-generate-config --show-hardware-config`, which carries the
+  filesystems disko would have owned), commit it, then apply and update
+  with the standard flow - `nix flake lock` unprivileged first (the same
+  root-owned-lock hazard as darwin), then:
+
+  ```sh
+  sudo nixos-rebuild switch --flake .#<host>
+  ```
+
+Recovery is a generation rollback, no flake evaluation involved:
+`sudo nixos-rebuild switch --rollback`, or pick an older generation from
+the boot menu at startup.
 
 ## Updating
 
