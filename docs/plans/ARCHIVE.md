@@ -4,3 +4,4 @@
 - spawned-executor: archived 2026-09-13 to ZK/plans dotfiles/spawned-executor (de68662)
 - tmux-tui-smoke: archived 2026-09-13 to ZK/plans dotfiles/tmux-tui-smoke (5b911d2)
 - herdr-runtime-cleanup: archived 2026-09-13 to ZK/plans dotfiles/herdr-runtime-cleanup (0210c21)
+- cross-platform-migration - archived 2026-09-18 to ~/workspace/github/ZK/plans/dotfiles/cross-platform-migration/ - final commit 69de918
