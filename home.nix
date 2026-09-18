@@ -43,5 +43,6 @@
     ./modules/home/darwin/herdr.nix
     ./modules/home/darwin/flycut.nix
     ./modules/home/darwin/screenshots.nix
+    ./modules/home/linux/generic-linux.nix
   ];
 }

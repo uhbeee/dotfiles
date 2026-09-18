@@ -60,22 +60,24 @@ cat > "$probe/flake.nix" <<EOF
   };
   outputs = { self, dotfiles, nixpkgs, home-manager, ... }:
     let
-      mk = system: user: home: profile: home-manager.lib.homeManagerConfiguration {
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = [ dotfiles.overlays.default ];
-          config.allowUnfree = true;
+      mkWith = system: user: home: profile: extra:
+        home-manager.lib.homeManagerConfiguration {
+          pkgs = import nixpkgs {
+            inherit system;
+            overlays = [ dotfiles.overlays.default ];
+            config.allowUnfree = true;
+          };
+          modules = [
+            dotfiles.homeManagerModules.default
+            {
+              home.username = user;
+              home.homeDirectory = home;
+              home.stateVersion = "25.05";
+              dotfiles.profile = profile;
+            }
+          ] ++ extra;
         };
-        modules = [
-          dotfiles.homeManagerModules.default
-          {
-            home.username = user;
-            home.homeDirectory = home;
-            home.stateVersion = "25.05";
-            dotfiles.profile = profile;
-          }
-        ];
-      };
+      mk = system: user: home: profile: mkWith system user home profile [ ];
     in {
       homeConfigurations."synthea" = mk builtins.currentSystem "synthea" "/opt/oddhome1" "cli";
       homeConfigurations."quorra" = mk builtins.currentSystem "quorra" "/Users/quorra" "full";
@@ -86,6 +88,13 @@ cat > "$probe/flake.nix" <<EOF
       homeConfigurations."linnea" = mk "aarch64-linux" "linnea" "/home/linnea" "cli";
       homeConfigurations."delia" = mk "aarch64-darwin" "delia" "/Users/delia" "full";
       homeConfigurations."freya" = mk "aarch64-linux" "freya" "/home/freya" "full";
+      homeConfigurations."petra" = mk "x86_64-linux" "petra" "/home/petra" "cli";
+      homeConfigurations."ronja" = mk "x86_64-linux" "ronja" "/home/ronja" "full";
+      # A consumer-owned profile location: the XDG state profile, in a
+      # custom state directory. Eval-only; exercises the genericLinux
+      # PATH fallback below.
+      homeConfigurations."solveig" = mkWith "aarch64-linux" "solveig" "/home/solveig" "cli"
+        [ { nix.assumeXdg = true; xdg.stateHome = "/var/lib/oddstate"; } ];
     };
 }
 EOF
@@ -203,6 +212,19 @@ check_user() { # check_user <username> <homedir> <profile>
 check_user synthea /opt/oddhome1 cli
 check_user quorra  /Users/quorra  full
 
+# The Linux fixtures, built for real through the phase-6 build route
+# (7.2/7.5): the same identity-leak and profile assertions, over actual
+# aarch64- and x86_64-linux closures. Opt-in because it needs a Linux
+# builder registered with the daemon; without one the fixtures stay
+# eval-only via the checks below, and x86_64's status stays whatever the
+# support matrix last earned - untested until a route builds it.
+if [ -n "${PROBE_BUILD_LINUX:-}" ]; then
+  check_user linnea /home/linnea cli
+  check_user freya  /home/freya  full
+  check_user petra  /home/petra  cli
+  check_user ronja  /home/ronja  full
+fi
+
 # Claude settings selection (phase 5.3): the herdr hook wiring is darwin's,
 # so a Linux consumer of the default module list must select the portable,
 # hook-stripped settings with no flag overridden anywhere - while darwin
@@ -292,6 +314,53 @@ check_agent_clis freya '{"cc":true,"co":true}' \
 check_agent_clis delia '{"cc":false,"co":false}' \
   "darwin consumer leaves claude/codex to the casks"
 
+# Generic-Linux integration (phase 7.4): standalone home-manager on a
+# non-NixOS host is the one place targets.genericLinux belongs. Standalone
+# Linux fixtures get it by default; darwin never (the option exists there,
+# only its effects are platform-gated); the NixOS embedding is checked in
+# the template eval below via submoduleSupport.
+check_generic_linux() { # check_generic_linux <config> <want> <label>
+  local got
+  if ! got="$(cd "$probe" && nix eval --json --impure \
+      ".#homeConfigurations.$1.config.targets.genericLinux.enable")"; then
+    bad "$1: targets.genericLinux eval failed"
+    return
+  fi
+  if [ "$got" = "$2" ]; then ok "$1: $3"; else bad "$1: $3 - got $got"; fi
+}
+check_generic_linux linnea true \
+  "standalone linux cli consumer enables targets.genericLinux"
+check_generic_linux ronja true \
+  "standalone linux full consumer enables targets.genericLinux"
+check_generic_linux delia false \
+  "darwin consumer leaves targets.genericLinux off"
+
+# The genericLinux PATH fallback (7.4): nix's own nix.sh no-ops when USER
+# is unset, so the zsh env wiring must put the profile bins on PATH
+# itself - at the CONSUMER's configured profile location (here
+# nix.useXdg with a custom xdg.stateHome), not a hardcoded
+# ~/.nix-profile - and must not stack in nested shells. The snippet is
+# executed for real: a clean zsh, empty environment (no USER), twice.
+if snippet="$(cd "$probe" && nix eval --raw --impure \
+    ".#homeConfigurations.solveig.config.programs.zsh.envExtra")"; then
+  case "$(scan_str "/var/lib/oddstate/nix/profile/bin" "$snippet")" in
+    MATCH) ok "solveig: PATH fallback targets the configured profile directory";;
+    CLEAN) bad "solveig: PATH fallback ignores the configured profile directory";;
+    *)     bad "solveig: envExtra scan could not complete";;
+  esac
+  entries="$(env -i /bin/zsh -f -c \
+      'PATH=/usr/bin:/bin; eval "$1"; eval "$1"; print -r -- "$PATH"' \
+      zsh "$snippet" 2>/dev/null \
+    | tr ':' '\n' | grep -c "^/var/lib/oddstate/nix/profile/bin$" || true)"
+  if [ "$entries" = 1 ]; then
+    ok "solveig: fallback adds the profile bin once, USER unset, nested-eval safe"
+  else
+    bad "solveig: fallback PATH entries with USER unset: got $entries, want 1"
+  fi
+else
+  bad "solveig: envExtra eval failed"
+fi
+
 # The NixOS composition (phase 8): scaffold the shipped template for real
 # and evaluate its NixOS variant against the git-sourced library - the
 # same eval a consumer's `nixos-rebuild` would start from. Building needs
@@ -320,10 +389,14 @@ if nixos="$(cd "$tpl" && nix eval --json \
       # The README fresh-install path reconnects over ssh post-install;
       # the shipped host must actually serve it.
       sshd = c.services.openssh.enable;
+      # NixOS owns the session wiring genericLinux would duplicate: the
+      # embedded home-manager user must not enable it (the 7.4
+      # submoduleSupport gate, seen from the consuming side).
+      genericLinux = c.home-manager.users.alice.targets.genericLinux.enable;
     }')"; then
-  want='{"disko":true,"flakes":true,"gdm":true,"gnome":true,"sshd":true,"toplevel":true,"wezterm":true,"zsh":true}'
+  want='{"disko":true,"flakes":true,"gdm":true,"genericLinux":false,"gnome":true,"sshd":true,"toplevel":true,"wezterm":true,"zsh":true}'
   if [ "$nixos" = "$want" ]; then
-    ok "template nixos variant evaluates: disko install attrs, gnome desktop, sshd, wezterm, zsh, flakes"
+    ok "template nixos variant evaluates: disko install attrs, gnome desktop, sshd, wezterm, zsh, flakes, no genericLinux"
   else
     bad "template nixos variant mismatch: got $nixos, want $want"
   fi

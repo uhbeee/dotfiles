@@ -115,6 +115,31 @@ the nixos-anywhere fresh-install path with a declarative disko disk layout.
 The per-machine convention is documented there, next to the files it
 governs.
 
+## Support matrix
+
+Statuses are earned by gates actually run, never inferred, and are scoped
+by platform, architecture and profile. **validated**: activated and
+exercised at runtime. **build-only**: the closure built through a real
+build route; runtime never exercised. **runtime-untested**: builds, but
+this exact runtime integration has never run. **untested**: not even a
+build has run.
+
+| Target | Arch | Profile | Status |
+|---|---|---|---|
+| macOS, nix-darwin + home-manager | aarch64 | full | validated - the daily-driver composition |
+| macOS, standalone home-manager | aarch64 | cli + full | validated - consumer-probe builds every test run; behavioral pass in a disposable account |
+| NixOS, system + home-manager modules | x86_64 | full | validated - real install; GNOME, WezTerm and nvim run from the library |
+| NixOS, system + home-manager modules | aarch64 | - | untested |
+| Non-NixOS Linux, standalone home-manager | aarch64 | cli | validated - Ubuntu container: activation, tool use, a second switch |
+| Non-NixOS Linux, standalone home-manager | aarch64 | full | runtime-untested - the generic-Linux GUI path has never run on a real desktop; the closure itself builds |
+| Non-NixOS Linux, standalone home-manager | x86_64 | cli | build-only - built through the Linux build route |
+| Non-NixOS Linux, standalone home-manager | x86_64 | full | runtime-untested - as aarch64 full; the closure builds through the Linux build route |
+| NixOS-WSL | x86_64 | cli | untested - not yet built; provisional once the tarball builds, validated only after a Windows import/login/rebuild/restart pass |
+
+The container row covers Ubuntu, servers, and Ubuntu-under-WSL, which is
+standalone home-manager like the rest; NixOS-WSL is its own row because it
+is a different installation, not a variant.
+
 ## Before you run it
 
 `modules/system/darwin/homebrew.nix` sets `homebrew.onActivation.cleanup = "zap"`, which removes
