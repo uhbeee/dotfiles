@@ -134,7 +134,7 @@ build has run.
 | Non-NixOS Linux, standalone home-manager | aarch64 | full | runtime-untested - the generic-Linux GUI path has never run on a real desktop; the closure itself builds |
 | Non-NixOS Linux, standalone home-manager | x86_64 | cli | build-only - built through the Linux build route |
 | Non-NixOS Linux, standalone home-manager | x86_64 | full | runtime-untested - as aarch64 full; the closure builds through the Linux build route |
-| NixOS-WSL | x86_64 | cli | provisional - the full system closure and tarball builder built through the Linux build route; validated only after a Windows import/login/rebuild/restart pass |
+| NixOS-WSL | x86_64 | cli | validated - tarball built through the Linux build route and imported on a real Windows machine (WSL 2.7.14); login, rebuild inside WSL to a second generation, restart and re-login all exercised |
 
 The container row covers Ubuntu, servers, and Ubuntu-under-WSL, which is
 standalone home-manager like the rest; NixOS-WSL is its own row because it
