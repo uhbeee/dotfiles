@@ -127,7 +127,8 @@ build has run.
 | Target | Arch | Profile | Status |
 |---|---|---|---|
 | macOS, nix-darwin + home-manager | aarch64 | full | validated - the daily-driver composition |
-| macOS, standalone home-manager | aarch64 | cli + full | validated - consumer-probe builds every test run; behavioral pass in a disposable account |
+| macOS, standalone home-manager | aarch64 | full | validated - behavioral pass in a disposable account (the pre-split composition, which is what the full profile kept) |
+| macOS, standalone home-manager | aarch64 | cli | build-only - consumer-probe builds it every test run; never activated standalone |
 | NixOS, system + home-manager modules | x86_64 | full | validated - real install; GNOME, WezTerm and nvim run from the library |
 | NixOS, system + home-manager modules | aarch64 | - | untested |
 | Non-NixOS Linux, standalone home-manager | aarch64 | cli | validated - Ubuntu container: activation, tool use, a second switch |

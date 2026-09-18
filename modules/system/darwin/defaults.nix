@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, lib, ... }:
 
 let
   # The consumer-owned identity options this module reads instead of a
@@ -8,19 +8,22 @@ let
   home = config.users.users.${user}.home;
 in
 {
+  # Every scalar is mkDefault so a machine overrides one setting by plain
+  # assignment; the dock lists stay at normal priority because nix merges
+  # lists rather than conflicting on them.
   system.defaults = {
     NSGlobalDomain = {
-      AppleInterfaceStyle = "Dark";
-      KeyRepeat = 2;          # fast key repeat
-      InitialKeyRepeat = 15;  # short delay before repeat
-      _HIHideMenuBar = true;  # auto-hide the menu bar
-      AppleShowAllExtensions = true;
+      AppleInterfaceStyle = lib.mkDefault "Dark";
+      KeyRepeat = lib.mkDefault 2;          # fast key repeat
+      InitialKeyRepeat = lib.mkDefault 15;  # short delay before repeat
+      _HIHideMenuBar = lib.mkDefault true;  # auto-hide the menu bar
+      AppleShowAllExtensions = lib.mkDefault true;
     };
-    dock.autohide = true;
+    dock.autohide = lib.mkDefault true;
     # Hot corners. nix-darwin has no option for the modifier key; both fire with
     # no modifier held, which is the default.
-    dock.wvous-tr-corner = 4;   # top right: show desktop
-    dock.wvous-br-corner = 14;  # bottom right: quick note
+    dock.wvous-tr-corner = lib.mkDefault 4;   # top right: show desktop
+    dock.wvous-br-corner = lib.mkDefault 14;  # bottom right: quick note
     # Dock contents, pinned. macOS cannot remove its built-in apps (the system
     # volume is sealed and read-only), so the way to not see the ones I don't
     # use is to declare exactly what belongs here.
@@ -42,13 +45,13 @@ in
         };
       }
     ];
-    dock.show-recents = false;  # or recent apps append themselves to the Dock
+    dock.show-recents = lib.mkDefault false;  # or recent apps append themselves to the Dock
     # Screenshots land in ~/Documents/Screenshots, not on the Desktop.
     # modules/home/darwin/screenshots.nix creates that directory: macOS silently
     # falls back to the Desktop if the configured path does not exist.
-    screencapture.location = "${home}/Documents/Screenshots";
-    finder.FXPreferredViewStyle = "Nlsv";  # list view by default
-    finder.CreateDesktop = false;          # clean desktop
-    trackpad.Clicking = true;              # tap to click
+    screencapture.location = lib.mkDefault "${home}/Documents/Screenshots";
+    finder.FXPreferredViewStyle = lib.mkDefault "Nlsv";  # list view by default
+    finder.CreateDesktop = lib.mkDefault false;          # clean desktop
+    trackpad.Clicking = lib.mkDefault true;              # tap to click
   };
 }
