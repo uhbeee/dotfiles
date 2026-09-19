@@ -67,6 +67,48 @@
       # dotfiles.excludePackages option; see lib/base-packages.nix.
       lib.basePackages = import ./lib/base-packages.nix;
 
+      # Per-platform build validation. Each check instantiates a synthetic,
+      # user-agnostic home configuration for one supported system and builds
+      # its full closure, so "builds on all platforms" is a failing command
+      # in this repo, not a claim. The fixtures are test scaffolding, not
+      # described machines - the identity values below exist only to satisfy
+      # home-manager's required options and describe nobody. Each
+      # architecture builds natively where it runs: `nix flake check` on the
+      # Mac builds the aarch64-darwin check, on the WSL box the x86_64-linux
+      # check (the one x86_64-linux fixture is the evidence for Linux and
+      # WSL both; no cross-compilation, no builder VMs).
+      checks =
+        let
+          fixtureFor = system:
+            let
+              pkgs = import nixpkgs {
+                inherit system;
+                overlays = [ piOverlay ];
+                # The fixture builds the full module tree, which reaches
+                # unfree packages (claude-code on Linux). On a real machine
+                # this consent lives in the machines repo; here it is part
+                # of the test fixture.
+                config.allowUnfree = true;
+              };
+            in
+            (home-manager.lib.homeManagerConfiguration {
+              inherit pkgs;
+              modules = [
+                self.homeManagerModules.default
+                {
+                  home.username = "fixture";
+                  home.homeDirectory =
+                    if pkgs.stdenv.hostPlatform.isDarwin
+                    then "/Users/fixture"
+                    else "/home/fixture";
+                  home.stateVersion = "26.05";
+                }
+              ];
+            }).activationPackage;
+        in
+        nixpkgs.lib.genAttrs [ "aarch64-darwin" "x86_64-linux" ]
+          (system: { home = fixtureFor system; });
+
       templates.machine = {
         path = ./templates/machine;
         description = "A machines repo consuming this library: a flake with the standalone home-manager, darwin and NixOS compositions, example machine files, and the install/update/recovery runbook.";

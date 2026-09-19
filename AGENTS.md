@@ -25,6 +25,17 @@ Git identity is handled: `home.nix` sets `programs.git.includes` to
 `~/.gitconfig.local`, so git resolves the identity at runtime and Nix never
 reads it. Do not reintroduce `programs.git.settings.user` here.
 
+## Cross-platform rule: built on one platform = installed on all
+
+A change built for one platform is wired for every supported platform
+(macOS, Linux, WSL) as much as possible: common modules by default,
+platform-gated with mkIf only when the thing itself is platform-bound.
+The `checks` output in flake.nix enforces this mechanically - it builds a
+synthetic user-agnostic home closure per supported system, so run
+`nix flake check` after module changes; each architecture's check builds
+natively on a box of that architecture (the Mac for aarch64-darwin, the
+WSL box for x86_64-linux).
+
 ## Other deliberate decisions - do NOT silently revert them
 
 - `homebrew.onActivation.cleanup = "zap"` in `modules/system/darwin/homebrew.nix`
