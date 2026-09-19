@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, pkgs, ... }:
 
 let
   authored = config.lib.dotfiles.authored;
@@ -9,6 +9,17 @@ in
   # machine can orchestrate from either claude or codex. The adapters
   # reference the core at ~/.config/plan-skills, so the links travel
   # together.
+
+  # The review surface's tools ride with the skills that need them (cf.
+  # pi.nix's nodejs), not in the exported base list: pandoc renders plan
+  # markdown to standalone HTML, lavish-axi serves it for browser
+  # annotation. Common module, no platform gate - installed everywhere
+  # the skills are (darwin, Linux, WSL). lavish-axi is pinned and built
+  # from the npm tarball in pkgs/lavish-axi.
+  home.packages = [
+    pkgs.pandoc
+    (pkgs.callPackage ../../../pkgs/lavish-axi { })
+  ];
   home.file.".config/plan-skills".source = authored "home/.config/plan-skills";
   home.file.".claude/skills/plan-create".source = authored "home/.claude/skills/plan-create";
   home.file.".claude/skills/plan-implement".source = authored "home/.claude/skills/plan-implement";
