@@ -15,3 +15,6 @@ result-*
 
 # Pi Calm is a runtime toggle; its local state file is never tracked
 /home/.pi/agent/calm
+
+# in-flight plan directories stay local; only ARCHIVE.md and README.md are tracked
+/docs/plans/*/

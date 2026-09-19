@@ -1,0 +1,17 @@
+# Extra app removals, applied on top of the pinned engine's default selection.
+# One identifier per line; '#' starts a comment (inline comments allowed).
+#
+# Every identifier here must exist in the pinned Win11Debloat release's
+# Config/Apps.json (debloat.ps1 validates this and aborts before any mutation
+# otherwise) or be handled by an explicit script-side handler in debloat.ps1.
+# An identifier the engine cannot handle must be removed from this file with
+# a comment saying why, or given such a handler.
+#
+# At pin 2026.08.24, XP9CXNGPPJ97XX and Microsoft.Windows.AIHub are already in
+# the engine's default selection; they stay listed so the exercised contract
+# (engine defaults PLUS these three) survives a future pin bump that drops
+# them from the defaults. debloat.ps1 deduplicates the union.
+
+Microsoft.OneDrive        # WinGet-method in Apps.json; if it survives the engine, debloat.ps1 runs OneDriveSetup.exe /uninstall
+XP9CXNGPPJ97XX            # Microsoft Copilot (Store product id; also swept by -DisableCopilot)
+Microsoft.Windows.AIHub   # Copilot+ AI Hub
