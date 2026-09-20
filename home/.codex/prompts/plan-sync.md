@@ -17,4 +17,6 @@ questions and stale current state, raising rather than editing anything
 that would contradict a Decision; append [decision] entries for
 deviations, and a [done] entry only when the commit exists (a reviewed
 item gets a [handoff] instead, and the sync finishes after the user
-commits); and report what changed. The user owns every commit.
+commits); republish the plan with `plan-publish` per ARTIFACTS.md
+("The review surface" - drain pending feedback first); and report what
+changed. The user owns every commit.

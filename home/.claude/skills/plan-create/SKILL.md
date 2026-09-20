@@ -36,13 +36,16 @@ Steps:
    editing the plan documents. Pause for the human after every reviewer
    round, as always.
 4. **Human review.** When the loop closes, publish plan.md (and
-   breakdown.md if useful) as a markdown artifact and hand the human the
-   link. Fold their inline comments and feedback back into the files per
-   ARTIFACTS.md.
+   breakdown.md if useful) with `plan-publish` so it opens in the
+   human's browser, and poll their annotations with `plan-feedback`.
+   Fold every annotation back into the files per ARTIFACTS.md ("The
+   review surface"): an edit or a recorded disagreement, disposition
+   reported.
 5. **Sign-off.** On the human's explicit approval: flip plan.md status
    to `approved YYYY-MM-DD`, create worklog.md with the `[decision]`
-   sign-off entry, republish the artifact. Point the human at
+   sign-off entry, republish with `plan-publish` (drain pending
+   feedback first, per ARTIFACTS.md). Point the human at
    `plan-implement` for the first item.
 
-Never commit, push, or publish anywhere beyond the artifact above; the
-human owns all of that.
+Never commit, push, or publish anywhere beyond the review surface
+above; the human owns all of that.

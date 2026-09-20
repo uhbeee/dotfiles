@@ -135,18 +135,39 @@ there).
   commit - and the plan directory is removed. No stub directories.
 - The human owns the commits in both repos, as always.
 
-## Artifacts (the human review surface)
+## The review surface (lavish)
 
 Humans review best where they can comment inline, so plan.md (and
-breakdown.md when useful) is published as a markdown artifact: a
-disposable render of the file, never a second master. Republish the same
-artifact (same URL) at checkpoints: when the design review closes, at
-sign-off, and after each plan-sync. Inline comments flow back through
-the orchestrator: each thread becomes an edit to the markdown or a
-recorded disagreement in the relevant review file, then gets a reply and
-is resolved. Never edit content in the artifact itself; if the render
-and the file disagree, the file is right and the artifact is stale.
+breakdown.md when useful) is published to lavish, the local-browser
+review surface. `plan-publish <file.md>` renders the file
+(self-contained HTML, cached outside any repo) and opens or refreshes
+it as a lavish-axi browser session; the render is disposable, never a
+second master - if the render and the file disagree, the file is right
+and the render is stale. Republishing the same file reuses the same
+session (open browsers live-reload), so checkpoints land in one place:
+publish when the design review closes, at sign-off, and after each
+plan-sync. Publish and poll are plain commands on PATH, identical from
+every orchestrator seat - claude, codex, or anything else.
 
-Publishing artifacts is a claude capability. When the orchestrator
-cannot publish (codex), skip the render: the human reviews the markdown
-directly and the rest of the flow is unchanged.
+Annotations flow back through `plan-feedback <file.md>`, a
+bounded-wait poll whose outcomes are distinguishable exit codes:
+feedback returned (0), nothing yet at timeout (10 - a timeout is never
+approval), session unavailable or unresponsive (11), session ended by
+the reviewer (12), review window disconnected (13). Every delivered
+payload is persisted to the session's feedback.log before the command
+returns; `plan-feedback --help` documents recovery for an orchestrator
+lost mid-delivery.
+
+Disposition guarantee: every polled annotation becomes an edit to the
+markdown or a recorded disagreement in the relevant review file, and
+its disposition is reported to the human at the pause point (a short
+`--reply` also surfaces it in the session's Conversation panel).
+Republish handshake: republish only after the human confirms at the
+pause point, in chat, that they are done annotating the current
+revision, then run one final drain poll - so a late annotation never
+attaches to the wrong revision. A session the reviewer ended from the
+browser is never reopened uninvited.
+
+Reviews happen on machines with a local browser. The floor, when no
+browser is at hand, is reviewing the markdown file directly; the rest
+of the flow is unchanged.

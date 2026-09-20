@@ -13,8 +13,8 @@ design review, human sign-off), `plan-implement` (the next work item),
 `plan-sync` (reconcile the plan docs after an item lands) and
 `plan-conformance-pass` (the whole-delivery audit). Role prompt templates
 live in ROLES.md next to this file; the documents the family maintains -
-the plan directory, worklog, approval gate, artifact checkpoints - are
-defined in ARTIFACTS.md.
+the plan directory, worklog, approval gate, review-surface publish
+checkpoints - are defined in ARTIFACTS.md.
 
 ## Seats
 
@@ -177,7 +177,11 @@ item, as usual.
 ## The design review (inside plan-create)
 
 The same loop, run over the plan itself before any implementation: the
-reviewer plays principal engineer on a design document. Differences from
+reviewer plays principal engineer on a design document. Because the
+orchestrator edits the plan here, the reviewer must be a different LLM
+from the orchestrator, whichever LLM orchestrates: a claude
+orchestrator takes a non-claude reviewer (default codex), a codex
+orchestrator a non-codex reviewer (default claude). Differences from
 the item loop: the templates are `design-review` / `design-review-verify`;
 the review file is `plan_review.md` in the plan directory; and the source
 of truth is the Intent and Decisions sections of the plan under review,
