@@ -27,7 +27,12 @@ Then draft plan.md and breakdown.md per
 ARTIFACTS.md at architecture level; run the design review loop per
 PROTOCOL.md ("The design review") with the design-review templates and
 review file plan_review.md, pausing for the user after every reviewer
-round; then hand the plan to the user for their own review, fold their
-feedback in, and on their explicit sign-off flip plan.md's status to
-approved and create worklog.md with the [decision] entry. Never commit
-or push; the user owns those.
+round; then publish plan.md (and breakdown.md if useful) with
+`plan-publish` for the user's own review, poll their annotations with
+`plan-feedback`, and fold every annotation back into the files per
+ARTIFACTS.md ("The review surface": an edit or a recorded
+disagreement, disposition reported); on their explicit sign-off flip
+plan.md's status to approved, create worklog.md with the [decision]
+entry, and republish with `plan-publish` (drain pending feedback
+first, per ARTIFACTS.md). Never commit, push, or publish anywhere
+beyond the review surface above; the user owns those.

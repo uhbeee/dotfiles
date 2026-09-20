@@ -1,6 +1,6 @@
 ---
 name: plan-sync
-description: "Reconcile the plan documents with what actually landed: mark the work item done in the breakdown, record deviations, append to the worklog, republish the artifact. Use after a plan-item-review loop closes, or whenever the plan docs have drifted from reality."
+description: "Reconcile the plan documents with what actually landed: mark the work item done in the breakdown, record deviations, append to the worklog, republish the plan to the review surface. Use after a plan-item-review loop closes, or whenever the plan docs have drifted from reality."
 ---
 
 You are the orchestrator. Read `~/.config/plan-skills/PROTOCOL.md` and
@@ -29,5 +29,6 @@ Steps:
    commit exists, with the commit and verification. For a `reviewed`
    item, record the state as a `[handoff]` instead and finish the sync
    (status flip plus `[done]`) after the human commits.
-5. **Republish** the plan artifact per ARTIFACTS.md, and report what
+5. **Republish** the plan with `plan-publish` per ARTIFACTS.md ("The
+   review surface" - drain pending feedback first), and report what
    changed. The human owns the commit of the doc updates.

@@ -47,7 +47,8 @@ In this directory:
 - `PROTOCOL.md` - the seats, the loop, isolation rules, CLI profiles.
 - `ROLES.md` - the prompt templates each spawned seat receives.
 - `ARTIFACTS.md` - the plan directory layout: plan.md, breakdown.md,
-  the append-only worklog, the approval gate, artifact publishing.
+  the append-only worklog, the approval gate, and the lavish review
+  surface (`plan-publish` / `plan-feedback`).
 
 Per plan, everything lives in one directory (default
 `docs/plans/<name>/`): the two plan docs, `worklog.md`, and every
