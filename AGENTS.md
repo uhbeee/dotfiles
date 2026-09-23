@@ -61,8 +61,11 @@ set - like all identity - in the consuming machines repo's machine file, never
 here. When a machine sets it to a local checkout of this repo, files under
 `home/` are edited there directly and take effect without a rebuild; adding a
 *new* symlink still needs a rebuild (from the machines repo), and consumers
-without the option get the store path. Do not assume the checkout you are
-working in is live-linked: that depends on the machine's setting.
+without the option get the store path. Work that lands upstream reaches such a
+machine in two steps, both needed: the rebuild creates the new links, and a
+pull in that checkout supplies their contents - merging a PR alone changes
+nothing there. Do not assume the checkout you are working in is live-linked:
+that depends on the machine's setting.
 
 Secrets and runtime state never belong in this repo. `gh`'s token lives in
 `~/.config/gh/hosts.yml`, which is deliberately unmanaged, and herdr's logs,

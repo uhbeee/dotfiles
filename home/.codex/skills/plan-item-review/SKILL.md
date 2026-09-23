@@ -10,6 +10,19 @@ You are the orchestrator of the review loop defined in
 file, `~/.config/plan-skills/ROLES.md` and
 `~/.config/plan-skills/ARTIFACTS.md` now, then follow them exactly.
 
+Asking in codex: its collaboration-mode rules come first, and a skill
+does not override them. This skill writes files, so it runs in Default
+mode, where `request_user_input` is for optional questions whose answer
+would materially improve the work - one to three per call, prefer one,
+every question carrying concrete options with your recommendation
+marked - and an empty return means carry on with your best judgment
+rather than ask again. Anything you actually need before you can
+continue is not that kind of question: ask it as one concise plain-text
+question and wait, never as options typed into a message, and never
+route a permission ask through the tool. What no mode changes: the
+answers below are the user's, so a missing one is asked for, never
+assumed.
+
 You need from the arguments or the user: the work item, the plan doc
 paths, and the review file path (default
 `<plan docs dir>/<work_item_slug>_review.md`). Executor/reviewer
@@ -25,7 +38,8 @@ the executor's - resume the item's executor session from its latest
 (full `executor` template) only if the session is lost or the profile
 changed, the [session] boundary entry appended immediately before and
 the id entry when the CLI reports it, and standalone reviews without a
-plan worklog get one named with the user first; after ADDRESS and
+plan worklog get one named with the user first, asked plainly; after
+ADDRESS and
 before any VERIFY round you apply the protocol's GATE step - classify
 the ADDRESS exit (blocked and abnormal go to the user) and re-run the
 item's validation line after every implemented exit, unconditionally,
