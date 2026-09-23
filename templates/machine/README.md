@@ -185,6 +185,16 @@ The lock update changes inputs; the rebuild is what applies them. Commit
 your record of known-working combinations, and the recovery steps below depend
 on it.
 
+Homebrew packages (the library's `brews` and `casks` on macOS) sit outside the
+lock: they are declared by name, not version. A rebuild installs what is
+missing and zaps what is undeclared, but never upgrades what is already
+installed. Upgrading is a deliberate act: `brew upgrade <name>` for one
+package, or set `homebrew.onActivation.upgrade = true` in your machine file to
+upgrade everything Homebrew-managed on every rebuild. Ignore the apps' own
+update prompts and keep self-updaters off where an app offers the choice: a
+self-updated app is unmanaged drift, and rollbacks cannot restore a cask
+version - Homebrew only serves today's.
+
 ## Recovery
 
 Every switch creates a generation, so most bad updates are a rollback. No
