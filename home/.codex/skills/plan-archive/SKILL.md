@@ -1,5 +1,9 @@
-Archive the finished plan named in the arguments:
-$ARGUMENTS
+---
+name: plan-archive
+description: "Move a finished plan's directory into an archive repo: verify the plan is terminal, stamp provenance, file it under <repo>/<plan>/, index it, and leave a one-line tombstone behind. Use when a plan's work is done and the plan should leave the working repo."
+---
+
+Archive the finished plan named in the user's request.
 
 You are the orchestrator. Read `~/.config/plan-skills/ARTIFACTS.md`
 ("Archival") now, then follow it exactly. No reviewer seat is involved.

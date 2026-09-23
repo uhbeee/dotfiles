@@ -10,16 +10,16 @@ and owns every commit.
 ## The lifecycle
 
 ```
-/plan-create <name>          interview -> plan.md + breakdown.md
+plan-create <name>           interview -> plan.md + breakdown.md
                              -> AI design review loop -> your sign-off
 
-/plan-implement <plan-dir>   next work item: implement
+plan-implement <plan-dir>    next work item: implement
   -> plan-item-review        -> impartial review loop over the item
   -> plan-sync               -> plan docs reconciled with what landed
 
-/plan-conformance-pass       whole-delivery audit against the plan
+plan-conformance-pass        whole-delivery audit against the plan
 
-/plan-archive <plan-dir>     finished plan moves to the archive repo
+plan-archive <plan-dir>      finished plan moves to the archive repo
                              (provenance stamp, index, tombstone)
 ```
 
@@ -28,8 +28,10 @@ finished work with a source-of-truth doc can be reviewed, plan or not.
 
 ## Driving it
 
-Type the commands above in claude code (skills) or codex (custom
-prompts); either agent orchestrates the same protocol from these files.
+Each command above is a skill both agent CLIs ship: type
+`/plan-create` in claude code, `$plan-create` in codex (the `$` mention
+popup lists them), and either agent orchestrates the same protocol from
+these files.
 You will be prompted for whatever is missing: plan directory, plan doc
 paths, reviewer profile (which LLM reviews, e.g. `codex`, `codex:<model>`,
 `claude`).
@@ -38,7 +40,12 @@ What to expect while a loop runs: the orchestrator pauses after every
 reviewer round so you can read the review file before anything is acted
 on; open items get executor responses appended under them and only the
 reviewer closes them; a disagreement that survives 3 rounds is escalated
-to you; nothing is ever committed or pushed by an agent.
+to you; no agent commits, pushes or opens a pull request on its own
+initiative, and the work reaches your default branch only through a
+pull request - opened by you, or by the orchestrator when you tell it
+to, and then left open for you. Telling an agent to push or open a PR
+never authorizes it to merge one: that takes your word on the PR in
+front of you, after you have read it.
 
 ## The files
 

@@ -46,8 +46,9 @@ upstream. Anything broken in here is mine, not his.
 
 ## Agent skills
 
-Skill families shipped by default, usable from both Claude Code (skills)
-and Codex (custom prompts):
+Skill families shipped by default, usable from both Claude Code
+(`/plan-create`) and Codex (`$plan-create`) - one skill directory per
+family per CLI:
 
 | Family | What it does | Docs |
 |--------|--------------|------|

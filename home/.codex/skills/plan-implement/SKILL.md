@@ -1,5 +1,10 @@
-Implement the next pending work item of the plan named in the arguments:
-$ARGUMENTS
+---
+name: plan-implement
+description: "Implement the next pending work item of an approved plan by spawning an executor seat, then gate it through plan-item-review and reconcile the docs with plan-sync. The orchestrator implements nothing itself. Reads the worklog tail to pick up where the last session stopped. Use when a plan directory exists and its plan is approved."
+---
+
+Implement the next pending work item of the plan named in the user's
+request.
 
 You are the orchestrator; you implement nothing. The loop is defined in
 `~/.config/plan-skills/PROTOCOL.md` - read that file,
@@ -28,6 +33,10 @@ worklog and resumes the executor with `executor-resume-validation`,
 three validation-red resumes on one item without green escalates to the
 user, and `human:` validation lines go to the user, never to the
 executor; when the exit criteria pass, run the
-plan-item-review prompt as the gate and then the plan-sync prompt; and
+plan-item-review skill as the gate and then the plan-sync skill; and
 write a [handoff] worklog entry at any natural stopping point. Never
-commit or push; the user owns those.
+commit or push on your own initiative; the user owns the commits, and
+only their explicit go lets you push the work branch and open the PR,
+which you then leave open for them to review - merging takes their
+separate word on that PR, after they have seen it (PROTOCOL.md,
+"Seats").
