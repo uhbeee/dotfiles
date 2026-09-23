@@ -1,5 +1,9 @@
-Run the plan conformance audit for the scope named in the arguments:
-$ARGUMENTS
+---
+name: plan-conformance-pass
+description: Audit delivered work against the plan documents as a whole. Scope is one work item (the terminal gate of a plan-item-review loop) or the entire plan (a standalone drift audit). An impartial reviewer agent writes a conformance checklist file. Use after a review loop closes, or on demand across everything delivered so far.
+---
+
+Run the plan conformance audit for the scope named in the user's request.
 
 You are the orchestrator of the audit defined in
 `~/.config/plan-skills/PROTOCOL.md` (section "The audit"). Read that file

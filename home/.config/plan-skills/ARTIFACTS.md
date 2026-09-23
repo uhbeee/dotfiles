@@ -49,7 +49,10 @@ must land first; none means it can start now), validation, exit
 criteria, and status (`pending` | `in progress` | `reviewed` |
 `done <commit>`). `reviewed` means the item passed its review loop and
 awaits the human's commit; only an existing commit makes it
-`done <commit>`.
+`done <commit>`. That commit is the one on the work branch: items are
+`done` before the branch merges, since landing on the default branch is
+always a pull request, and no agent merges one until the human has
+reviewed it and said to merge that PR (PROTOCOL.md, "Seats").
 
 Drafting rules:
 
@@ -71,7 +74,10 @@ Append-only, chronological. One entry per line or short block:
 `- YYYY-MM-DD [type] ...`. Types:
 
 - `[done]` - an item landed: commits, how it was verified. Only an
-  existing commit earns this entry.
+  existing commit earns this entry. The branch commit is enough; the
+  pull request that merges it is worth its own `[done]` entry naming
+  the PR, since the merge is a separate landing event, gated on the
+  human's own word about that PR (PROTOCOL.md, "Seats").
 - `[implemented]` - the executor finished an item pre-review: what
   changed, how it was verified locally. Distinct from `[done]` so the
   audit trail separates executor completion from delivered work.

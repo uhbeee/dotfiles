@@ -9,6 +9,12 @@ in
   # machine can orchestrate from either claude or codex. The adapters
   # reference the core at ~/.config/plan-skills, so the links travel
   # together.
+  #
+  # Both CLIs take the adapter as a skill directory, and each is linked
+  # as a whole directory on purpose: codex discovers a skill whose
+  # directory is a symlink, but skips a real directory holding a
+  # per-file SKILL.md symlink (verified on codex-cli 0.153.4), so
+  # per-file links here would silently produce no entry points.
 
   # The review surface's tools ride with the skills that need them (cf.
   # pi.nix's nodejs), not in the exported base list: pandoc renders plan
@@ -34,10 +40,10 @@ in
   home.file.".claude/skills/plan-sync".source = authored "home/.claude/skills/plan-sync";
   home.file.".claude/skills/plan-conformance-pass".source = authored "home/.claude/skills/plan-conformance-pass";
   home.file.".claude/skills/plan-archive".source = authored "home/.claude/skills/plan-archive";
-  home.file.".codex/prompts/plan-create.md".source = authored "home/.codex/prompts/plan-create.md";
-  home.file.".codex/prompts/plan-implement.md".source = authored "home/.codex/prompts/plan-implement.md";
-  home.file.".codex/prompts/plan-item-review.md".source = authored "home/.codex/prompts/plan-item-review.md";
-  home.file.".codex/prompts/plan-sync.md".source = authored "home/.codex/prompts/plan-sync.md";
-  home.file.".codex/prompts/plan-conformance-pass.md".source = authored "home/.codex/prompts/plan-conformance-pass.md";
-  home.file.".codex/prompts/plan-archive.md".source = authored "home/.codex/prompts/plan-archive.md";
+  home.file.".codex/skills/plan-create".source = authored "home/.codex/skills/plan-create";
+  home.file.".codex/skills/plan-implement".source = authored "home/.codex/skills/plan-implement";
+  home.file.".codex/skills/plan-item-review".source = authored "home/.codex/skills/plan-item-review";
+  home.file.".codex/skills/plan-sync".source = authored "home/.codex/skills/plan-sync";
+  home.file.".codex/skills/plan-conformance-pass".source = authored "home/.codex/skills/plan-conformance-pass";
+  home.file.".codex/skills/plan-archive".source = authored "home/.codex/skills/plan-archive";
 }

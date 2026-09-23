@@ -1,5 +1,9 @@
-Run the plan review loop for the work item named in the arguments:
-$ARGUMENTS
+---
+name: plan-item-review
+description: Run the plan review loop for a finished work item. An impartial reviewer agent (default codex) judges the work against the plan docs and writes a checklist review file; a spawned executor seat addresses items; the loop repeats until the reviewer closes everything. Use when a phase or work item from a plan document is done and needs review.
+---
+
+Run the plan review loop for the work item named in the user's request.
 
 You are the orchestrator of the review loop defined in
 `~/.config/plan-skills/PROTOCOL.md`; you implement nothing. Read that
@@ -31,5 +35,5 @@ or edit reviewer text; you pause and report to the user after every
 reviewer round before acting on it; every seat's stdout goes to a temp
 log you name to the user; three verify rounds without closure on an
 item means escalate to the user; when all items close, run the
-plan-conformance-pass prompt as the terminal gate. Commits are the
+plan-conformance-pass skill as the terminal gate. Commits are the
 user's call.

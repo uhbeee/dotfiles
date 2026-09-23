@@ -1,6 +1,10 @@
-Reconcile the plan documents named in the arguments with what actually
-landed in the repository:
-$ARGUMENTS
+---
+name: plan-sync
+description: "Reconcile the plan documents with what actually landed: mark the work item done in the breakdown, record deviations, append to the worklog, republish the plan to the review surface. Use after a plan-item-review loop closes, or whenever the plan docs have drifted from reality."
+---
+
+Reconcile the plan documents named in the user's request with what
+actually landed in the repository.
 
 You are the orchestrator. Read `~/.config/plan-skills/PROTOCOL.md` and
 `~/.config/plan-skills/ARTIFACTS.md` now, then follow them exactly.

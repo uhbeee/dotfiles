@@ -47,5 +47,5 @@ Steps:
    feedback first, per ARTIFACTS.md). Point the human at
    `plan-implement` for the first item.
 
-Never commit, push, or publish anywhere beyond the review surface
-above; the human owns all of that.
+Never commit, push, or publish on your own initiative beyond the
+review surface above; the human owns all of that.

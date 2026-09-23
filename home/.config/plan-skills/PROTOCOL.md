@@ -59,7 +59,17 @@ Hard rules, regardless of who fills which seat:
   plan documents, not the prompt.
 - No seat communicates with another except through the review file and
   the worklog.
-- The human gates everything at the pause points and owns commits.
+- The human gates everything at the pause points and owns landing the
+  work: no agent commits, pushes or opens a pull request on its own
+  initiative, and nothing reaches the default branch except through a
+  pull request - never a direct push. Commits are the human's. On their
+  explicit go the orchestrator may push the work branch and open the PR
+  for them - and opening it is where the agent stops: the PR is left
+  for the human to review. Merging takes its own instruction, given
+  after they have seen that PR and naming it. A go to push or open, or
+  any earlier or broader word about landing the work, never carries
+  merge authorization with it; when in doubt the PR stays open. Spawned
+  seats are stricter still and never commit or push at all (ROLES.md).
 
 ## The review file
 
@@ -233,6 +243,11 @@ codex-cli 0.153.4 and claude code. Run from the repo root.
 - Executor seat: the same commands and grant - `workspace-write` is
   already full write + exec within the tree, which is what an executor
   needs.
+- Seats get their filled template as the inline `<prompt>` argument, so
+  spawning never depends on codex discovering anything on disk. Entry
+  points are the other half: the human-facing `plan-*` adapters are
+  codex skills (`~/.codex/skills/plan-<name>/SKILL.md`, mentioned as
+  `$plan-<name>`), since 0.153.4 has no custom-prompt discovery at all.
 
 ### claude
 
@@ -301,6 +316,16 @@ Rough edges from the exercise, filed:
 - `claude -p` reports its session id only at exit, so the `[session]`
   id entry always lands post-invocation - as the session-record note
   above states; observed, not just predicted.
+- codex-cli 0.153.4 ignores `~/.codex/prompts` entirely: custom prompts
+  are gone, so the `/plan-*` entry points the codex adapters were
+  authored as never resolved on it (measured against the installed CLI:
+  regular file, symlinked file, dash-free name and frontmatter variants
+  all produce an empty slash popup while built-ins match). The adapters
+  are codex *skills* now - same SKILL.md shape as the claude side,
+  invoked `$plan-<name>`. Discovery has a shape rule worth knowing
+  before wiring them from a config manager: a skill directory that is
+  itself a symlink is discovered, a real directory holding a per-file
+  `SKILL.md` symlink is not.
 - The orchestrator wrote `[done]` for the tmux item's review-loop and
   conformance completions while the commit was still pending, against
   ARTIFACTS.md's committed-only meaning; both entries are superseded

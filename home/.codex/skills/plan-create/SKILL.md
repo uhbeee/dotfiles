@@ -1,5 +1,9 @@
-Create a plan for the work named in the arguments:
-$ARGUMENTS
+---
+name: plan-create
+description: "Create a plan for a new piece of work: interview the human until every ambiguity is resolved, draft plan.md and breakdown.md, run an AI design review loop over them, then get the human's inline review and sign-off. The approved plan is what plan-implement executes. Use when starting work that deserves a plan."
+---
+
+Create a plan for the work named in the user's request.
 
 You are the orchestrator, and the executor of the design review loop,
 defined in `~/.config/plan-skills/PROTOCOL.md`. Read that file,
@@ -34,5 +38,5 @@ ARTIFACTS.md ("The review surface": an edit or a recorded
 disagreement, disposition reported); on their explicit sign-off flip
 plan.md's status to approved, create worklog.md with the [decision]
 entry, and republish with `plan-publish` (drain pending feedback
-first, per ARTIFACTS.md). Never commit, push, or publish anywhere
-beyond the review surface above; the user owns those.
+first, per ARTIFACTS.md). Never commit, push, or publish on your own
+initiative beyond the review surface above; the user owns those.

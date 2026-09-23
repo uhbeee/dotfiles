@@ -44,5 +44,8 @@ Steps:
 7. **Stopping.** At any natural stopping point, or when the session is
    running long, write a `[handoff]` worklog entry before you stop.
 
-Never commit or push; the human owns those, and is the one who decides
-when a reviewed item becomes a commit or PR.
+Never commit or push on your own initiative; the human owns the commits
+and decides when a reviewed item becomes one. On their explicit go you
+may push the work branch and open the PR for them, then stop: leave it
+for them to review. Merging takes their separate word on that PR, after
+they have seen it (PROTOCOL.md, "Seats").
