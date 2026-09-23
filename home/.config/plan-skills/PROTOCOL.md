@@ -243,6 +243,27 @@ codex-cli 0.153.4 and claude code. Run from the repo root.
 - Executor seat: the same commands and grant - `workspace-write` is
   already full write + exec within the tree, which is what an executor
   needs.
+- Interactive asks from the orchestrator seat: codex's native picker is
+  `request_user_input`, gated behind the under-development feature flag
+  `default_mode_request_user_input` - without it the tool is absent from
+  the tool list and codex asks in numbered prose instead. Enable it per
+  machine in `~/.codex/config.toml` under `[features]` (that file mixes
+  in machine-local trust entries, so it is not repo-managed). Codex's
+  collaboration modes then govern how it may be used, and a skill does
+  not override them. In Plan mode the picker is the preferred route for
+  any question and codex biases toward asking over guessing, but nothing
+  may write files. In Default mode - where anything that writes runs -
+  the picker is for optional questions only, an empty return means
+  continue on best judgment rather than re-ask, and required input is
+  one concise plain-text question instead, never choices typed into a
+  message; permission asks never go through the tool at all. Every call
+  carries one to three questions (prefer one) and each question needs
+  options. Only the human switches modes (Shift+Tab). So plan-create's
+  interview wants Plan mode and its drafting half Default, with the
+  handoff asked for and waited on; the other skills run in Default and
+  keep their mandatory asks in plain text. Spawned seats need none of
+  this: `codex exec` refuses the tool, and a seat gets its whole
+  template as an argument.
 - Seats get their filled template as the inline `<prompt>` argument, so
   spawning never depends on codex discovering anything on disk. Entry
   points are the other half: the human-facing `plan-*` adapters are

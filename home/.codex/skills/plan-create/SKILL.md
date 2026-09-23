@@ -10,6 +10,24 @@ defined in `~/.config/plan-skills/PROTOCOL.md`. Read that file,
 `~/.config/plan-skills/ROLES.md` and `~/.config/plan-skills/ARTIFACTS.md`
 now, then follow them exactly.
 
+Asking in codex: this skill spans two of its collaboration modes, and
+only the user switches between them (Shift+Tab) - you cannot, and must
+not claim to. Say which mode you need and wait. The interview belongs
+in Plan mode, where `request_user_input` is the preferred route for any
+question and codex itself biases toward asking over guessing; ask for
+Plan mode before you start interviewing. Drafting the plan documents
+writes files, which Plan mode forbids, so ask for Default mode once the
+interview is done and before you draft. Each picker call carries one to
+three questions (prefer one, and every question needs concrete options
+with your recommendation marked) - take as many calls as the interview
+needs. If the user stays in Default mode, its rules apply instead: the
+picker is only for optional questions, an empty return means proceed on
+your best judgment rather than re-ask, and anything you genuinely need
+is one concise plain-text question at a time - so ask the decisions out
+one by one and never write multiple choices into a message. Either way
+ambiguity is the user's to resolve: a guess that reaches the Decisions
+table is a defect, and that table is final.
+
 You need from the arguments or the user: the plan name, the plan
 directory (default `docs/plans/<plan_name_slug>/`), and the
 design-review reviewer profile (must be a different LLM from you, since
@@ -18,7 +36,7 @@ profile table). Ask for whatever is missing rather than guessing.
 
 The steps: interview the user until every ambiguity is resolved (intent,
 existing context pointers, scope in and out, constraints, dependencies,
-risks, deadlines, success criteria) - up to 4 questions per round, as
+risks, deadlines, success criteria) - at most 3 questions per ask, as
 many rounds as it takes, and "whatever you think is best" gets your
 recommendation plus the user's explicit confirmation, never a silent
 choice; the interview also asks which executor and

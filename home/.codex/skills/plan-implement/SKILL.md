@@ -11,6 +11,19 @@ You are the orchestrator; you implement nothing. The loop is defined in
 `~/.config/plan-skills/ROLES.md` and `~/.config/plan-skills/ARTIFACTS.md`
 now, then follow them exactly, especially "The executor seat".
 
+Asking in codex: its collaboration-mode rules come first, and a skill
+does not override them. This skill writes files, so it runs in Default
+mode, where `request_user_input` is for optional questions whose answer
+would materially improve the work - one to three per call, prefer one,
+every question carrying concrete options with your recommendation
+marked - and an empty return means carry on with your best judgment
+rather than ask again. Anything you actually need before you can
+continue is not that kind of question: ask it as one concise plain-text
+question and wait, never as options typed into a message, and never
+route a permission ask through the tool. What no mode changes: the
+answers below are the user's, so a missing one is asked for, never
+assumed.
+
 You need from the arguments or the user: the plan directory (and
 optionally which item). Executor/reviewer profiles come from plan.md's
 Decisions table, overridable per run; plans without recorded profiles
@@ -21,8 +34,9 @@ missing rather than guessing.
 The steps: read plan.md, breakdown.md and the tail of worklog.md (a
 [handoff] entry is the previous session's baton - do what it says
 first); refuse to implement unless plan.md's status is approved; confirm
-the next pending item whose blocking edges are all done with the user,
-offering a branch; append the [session] boundary entry immediately
+the next pending item whose blocking edges are all done with the user -
+required input, so a plain question - offering a branch; append the
+[session] boundary entry immediately
 before spawning the executor with the filled `executor` template only
 (work item, plan doc paths, review file, worklog), append the id entry
 as soon as the CLI reports the session id, and capture stdout to a temp
