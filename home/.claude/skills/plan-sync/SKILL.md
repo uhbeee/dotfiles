@@ -21,9 +21,11 @@ Steps:
    implementation deviated from the drafted scope, and update the
    status header line.
 3. **plan.md**: update Open questions that got answered and any current
-   state the plan asserts that is no longer true. Anything that would
-   contradict a Decision is the human's call to change, not yours -
-   raise it instead of editing.
+   state the plan asserts that is no longer true. Recording an answer
+   is your work; adding, dropping or rewording the questions themselves
+   after approval changes the approved plan and takes a `[decision]`.
+   Anything that would contradict a Decision is the human's call to
+   change, not yours - raise it instead of editing.
 4. **worklog.md**: append `[decision]` entries for deviations not yet
    recorded. The `[done]` entry means landed - append it only when the
    commit exists, with the commit and verification. For a `reviewed`

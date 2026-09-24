@@ -34,20 +34,27 @@ rather than guessing.
 Non-negotiables, restated from the protocol: every seat is spawned with
 its filled template only, never with your session context; ADDRESS is
 the executor's - resume the item's executor session from its latest
-[session] id entry with the `executor-address` template, fresh spawn
+[session] id entry whose seat is executor, never a reviewer's id entry
+from the same worklog, with the `executor-address` template, fresh spawn
 (full `executor` template) only if the session is lost or the profile
 changed, the [session] boundary entry appended immediately before and
-the id entry when the CLI reports it, and standalone reviews without a
-plan worklog get one named with the user first, asked plainly; after
-ADDRESS and
-before any VERIFY round you apply the protocol's GATE step - classify
+the id entry when the CLI reports it - after the seat's terminal entry
+for `claude -p`, which reports ids only at exit; record it then rather
+than back-dating it (and name your own seat and profile at the run's
+first boundary when this skill runs standalone), and
+standalone reviews without a plan worklog get one named with the user
+first, asked plainly; after ADDRESS and before any VERIFY round you
+apply the protocol's GATE step - classify
 the ADDRESS exit (blocked and abnormal go to the user) and re-run the
 item's validation line after every implemented exit, unconditionally,
 red following the validation gate, never a reviewer round; you never
 close an item
 or edit reviewer text; you pause and report to the user after every
 reviewer round before acting on it; every seat's stdout goes to a temp
-log you name to the user; three verify rounds without closure on an
+log you name to the user, and every seat including the reviewer gets
+the full [session] pair - boundary before each spawn or resume, id
+entry as soon as the id is known - and verify rounds resume that
+reviewer's own id entry; three verify rounds without closure on an
 item means escalate to the user; when all items close, run the
 plan-conformance-pass skill as the terminal gate. Commits are the
 user's call.

@@ -32,13 +32,16 @@ user's call, recorded first as a [decision] worklog entry); write
 ARCHIVED.md into the plan directory per ARTIFACTS.md (source repo path
 and remote, the items' commit range, created / approved / archived
 dates, outcome against the plan's Intent, the plan-skills core
-version); check the destination
+version - reporting what the worklog recorded and never better, so a
+partial or unverified check is stamped as one); check the destination
 `<archive repo>/<source repo name>/<plan_name_slug>/` - if it already
 exists, stop and ask - a plain question, since you cannot continue
 without the answer - as the archive is append-only and nothing is
 copied, overwritten, or removed until the user resolves the collision -
 then copy the directory there, verify the copy,
-and append one index line to the archive repo's README.md; append the
+and append one index line to the archive's single index - the repo's
+top-level README.md unless an index already exists elsewhere, which
+then wins, and never a second one; append the
 one-line tombstone to the source repo's docs/plans/ARCHIVE.md and
 remove the plan directory; report both sides. The user owns the commit
 in each repo; the move is not durable until both are committed.

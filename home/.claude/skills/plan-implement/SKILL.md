@@ -29,12 +29,15 @@ Steps:
    review file path, worklog path - and spawn it per the executor
    profile (executor grants, per the protocol's profile table). Append
    the `[session]` boundary entry immediately before the spawn, and the
-   id entry as soon as the CLI reports the session id. Capture stdout
+   id entry as soon as the CLI reports the session id. At the run's
+   first boundary name your own seat and profile too, so the worklog
+   records who orchestrated instead of leaving it to inference. Capture stdout
    to a temp log you name to the human. Do not tail it; wait for exit.
 5. **Judge.** Classify the exit per PROTOCOL.md ("The executor seat"):
    blocked and abnormal go to the human. On implemented, run the item's
-   validation line yourself; red means append the evidence to the
-   worklog and resume the executor with `executor-resume-validation` -
+   validation line yourself, recording what you ran and what came back
+   as a `[validation]` worklog entry either way; red means resume the
+   executor with `executor-resume-validation` pointing at it -
    three validation-red resumes on one item without green escalates to
    the human; `human:` validation lines go to the human at the pause,
    never to the executor.
@@ -44,8 +47,8 @@ Steps:
 7. **Stopping.** At any natural stopping point, or when the session is
    running long, write a `[handoff]` worklog entry before you stop.
 
-Never commit or push on your own initiative; the human owns the commits
-and decides when a reviewed item becomes one. On their explicit go you
-may push the work branch and open the PR for them, then stop: leave it
-for them to review. Merging takes their separate word on that PR, after
-they have seen it (PROTOCOL.md, "Seats").
+Never commit, push, or open a PR on your own initiative; each takes the
+human's explicit go, and a go for one is not a go for the next. On that
+go you may commit, push the work branch and open the PR for them, then
+stop: leave it for them to review. Merging takes their separate word
+on that PR, after they have seen it (PROTOCOL.md, "Seats").

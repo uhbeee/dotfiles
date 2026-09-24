@@ -23,10 +23,17 @@ Non-negotiables, restated from the protocol:
   session goes into any seat's prompt; the executor's case for an item
   goes into the review file response, where the human can audit it.
 - ADDRESS is the executor's: resume the item's executor session (its
-  latest `[session]` id entry) with the `executor-address` template; a
+  latest `[session]` id entry whose seat is executor - reviewer ids
+  live in the same worklog and resuming one here would put the review
+  seat on the executor's work) with the `executor-address` template; a
   fresh spawn (full `executor` template) only if the session is lost
   or the profile changed. Either way, append the `[session]` boundary
-  entry immediately before, and the id entry when the CLI reports it.
+  entry immediately before, and the id entry when the CLI reports it,
+  which for `claude -p` is after that seat's terminal entry - record it
+  then, honestly, and never back-date one to look earlier. Verify
+  rounds resume the reviewer's own latest id entry, not the item's
+  latest. When this skill runs standalone, name your own seat and
+  profile at the first boundary.
   For standalone reviews with no plan worklog, name a worklog file
   with the human first - the executor seat needs one.
 - After ADDRESS and before any VERIFY round, apply the protocol's GATE
@@ -38,9 +45,13 @@ Non-negotiables, restated from the protocol:
 - Pause and report to the human after every reviewer round (the initial
   review and each verify), before acting on it.
 - Capture each seat invocation's stdout to a temp log and tell the
-  human where it is. Save the codex thread id from the first
-  `thread.started` line (or the claude `session_id`); later rounds
-  resume it.
+  human where it is. The reviewer seat gets the same `[session]` record
+  as the executor, not a mention in passing: a boundary entry before
+  every spawn and resume, and an id entry when the CLI reports the id -
+  the codex `thread.started` line, or the claude `session_id` - which
+  later rounds resume from. With `claude -p` that id arrives at exit,
+  so its entry lands after the seat's terminal entry: write it then,
+  and never back-date one to look earlier.
 - Three verify rounds on the same item without closure means escalate to
   the human, not another round.
 - When all items are closed, invoke the `plan-conformance-pass` skill for

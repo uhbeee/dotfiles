@@ -4,8 +4,9 @@ A plan-driven workflow for working with AI agents, built on one rule:
 agents never talk to each other directly. An executor agent does the
 work, an impartial reviewer agent (a different LLM, in its own session)
 judges it against plan documents, and everything between them goes
-through markdown files a human can audit. The human gates every round
-and owns every commit.
+through markdown files a human can audit. The human gates every round,
+and nothing is committed, pushed or opened as a PR without their
+explicit go.
 
 ## The lifecycle
 
@@ -41,9 +42,10 @@ reviewer round so you can read the review file before anything is acted
 on; open items get executor responses appended under them and only the
 reviewer closes them; a disagreement that survives 3 rounds is escalated
 to you; no agent commits, pushes or opens a pull request on its own
-initiative, and the work reaches your default branch only through a
-pull request - opened by you, or by the orchestrator when you tell it
-to, and then left open for you. Telling an agent to push or open a PR
+initiative - each of those takes your explicit go, and a go for one is
+not a go for the next - and the work reaches your default branch only
+through a pull request, opened by you or by the orchestrator when you
+tell it to, and then left open for you. Telling an agent to push or open a PR
 never authorizes it to merge one: that takes your word on the PR in
 front of you, after you have read it.
 

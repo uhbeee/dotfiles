@@ -114,8 +114,12 @@ locally. Any wall - a failing check, a missing dependency, information
 the plan documents should carry but do not, anything stuck - gets a
 `[blocker]` entry naming what unblocks it, and you stop there; a wall
 that contradicts a plan Decision is always a blocker, never quietly
-worked around. Deviations within your discretion get a `[decision]`
-entry as they happen. Every run of yours ends with an `[implemented]`
+worked around. A command your sandbox will not run (a build, anything
+privileged) is such a wall: the `[blocker]` names the exact command
+lines you need run and what each outcome would mean, and you never
+skip the check or call work verified on a command you could not run.
+Deviations within your discretion get a `[decision]` entry as they
+happen. Every run of yours ends with an `[implemented]`
 or `[blocker]` entry. You communicate only through the worklog and
 {REVIEW_FILE}. Never mark a review item closed and never edit the
 reviewer's text; closing items is the reviewer's job. Never commit,
@@ -147,7 +151,11 @@ work: read the tail of the worklog at {WORKLOG} - the latest
 `[decision]` entries record it and bind you, and the plan documents
 ({PLAN_DOCS}) may have been repaired since you stopped; re-read what
 they now say before continuing. Continue implementing from where your
-last entry left off. The full rules: validation and exit criteria stay
+last entry left off. If the decision authorized commands your sandbox
+cannot run, their results are in the worklog's latest `[validation]`
+entry: that entry is the result, so work from what it records rather
+than re-running the command, and a further run you need is another
+`[blocker]`. The full rules: validation and exit criteria stay
 binding except `human:` lines, which you note and never block on; any
 wall gets a `[blocker]` worklog entry and you stop; end this run with
 an `[implemented]` entry or that `[blocker]`; never mark a review item
@@ -157,7 +165,9 @@ closed, never edit the reviewer's text, never commit, push, or publish.
 
 Your `[implemented]` entry for {WORK_ITEM} did not pass the item's
 validation. The failing command and its output are recorded in the
-latest validation-evidence entry of the worklog at {WORKLOG}; read the
+latest `[validation]` entry of the worklog at {WORKLOG} - if that
+command is one your own sandbox cannot run, the entry stands in for
+running it: work from what it records instead of retrying it. Read the
 worklog tail first - `[decision]` entries since your last entry are
 human steering and bind you. Fix the work, re-verify locally, and
 append a new `[implemented]` entry. The plan documents remain the
