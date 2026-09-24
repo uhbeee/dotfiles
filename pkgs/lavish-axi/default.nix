@@ -9,8 +9,12 @@
 #     `npm install --package-lock-only --ignore-scripts` generates from it.
 #     Plain copies, no tooling in postPatch: the npm-deps fetcher runs
 #     postPatch too but without this derivation's build inputs. To bump the
-#     version: update `version`, refetch the tarball hash, regenerate both
-#     vendored files from the new tarball the same way, reset npmDepsHash.
+#     version: update `version` and refetch the tarball hash. In a scratch
+#     directory, place the new tarball's package.json with devDependencies
+#     removed alongside a copy of the current vendored package-lock.json.
+#     There, run `npm install --package-lock-only --ignore-scripts` to retain
+#     compatible resolutions, then copy both generated files back here.
+#     Reset npmDepsHash and build to discover and verify the new hash.
 #   - the build script is skipped (dontNpmBuild) and lifecycle scripts are
 #     ignored: prepare/prepack call scripts/ that the tarball does not
 #     contain, and every runtime dep is pure JS with nothing to compile.
@@ -18,11 +22,11 @@
 # shebang is patched to the store's node by the standard build hooks.
 buildNpmPackage rec {
   pname = "lavish-axi";
-  version = "0.1.73";
+  version = "0.1.78";
 
   src = fetchurl {
     url = "https://registry.npmjs.org/lavish-axi/-/lavish-axi-${version}.tgz";
-    hash = "sha256-YswQVVO7ZFGtTz01kQqHde3PC3VtyKqSZm5wCDZyIz8=";
+    hash = "sha256-DBDZNSpjqMi2vpCNHCnKsvG2hXWRDPMuXLbYF4umK4I=";
   };
 
   # Align the unpacked package.json with the dev-stripped vendored lock,
@@ -32,7 +36,7 @@ buildNpmPackage rec {
     cp ${./package-lock.json} package-lock.json
   '';
 
-  npmDepsHash = "sha256-gosoP5ypRev0fAyG5/hQhi72ayro1LuxExpkwv4zLPc=";
+  npmDepsHash = "sha256-mtiAIniE6Uh3ZhqvgKCXK70FCDuptBeL4PaXQ06rRe8=";
 
   dontNpmBuild = true;
   npmFlags = [ "--ignore-scripts" ];
