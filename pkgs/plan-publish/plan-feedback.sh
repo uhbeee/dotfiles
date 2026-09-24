@@ -14,9 +14,11 @@ hangs. A timeout means no feedback yet - it is NEVER approval.
 
 Options:
   --timeout <seconds>  how long to wait before giving up (default 300).
-                       Wall clock is bounded by this plus a fixed grace
-                       of about 15 seconds that covers server startup
-                       and an unresponsive server
+                       The client watchdog allows this full timeout
+                       plus about 15 seconds for startup and termination.
+                       An unresponsive server can take that entire time
+                       to produce exit 11; detection is not limited to
+                       the extra 15 seconds
   --reply <text>       show a short agent reply in the session's
                        Conversation panel before waiting
   --help               show this help
@@ -31,7 +33,10 @@ Exit codes:
       server stopped responding mid-poll ("unresponsive" on stderr) -
       run plan-publish first, or retry for the unresponsive case
   12  session already ended by the reviewer; nothing more will arrive
-  13  review window disconnected; session resumable - ask the reviewer
+  13  last review window disconnected during this poll and its reconnect
+      grace expired before the timeout; session resumable - ask the reviewer.
+      Upstream limitation: a window already closed before polling begins
+      can yield timeout 10 instead
   1   anything else
 
 Durability and recovery:
@@ -54,8 +59,8 @@ Durability and recovery:
       (exit 0). A file is recovered only once its poll's processes
       have fully exited - never while any process still holds it
       open - so a poll that lingers after its wrapper died (normally
-      at most one slice plus its grace, ~20s; a stopped process is
-      left untouched until it resumes) delays recovery to a later
+      until its requested server timeout; an unresponsive or stopped
+      orphan can linger longer) delays recovery to a later
       run but never loses the payload.
   Feedback the reviewer queued but no poll has delivered yet survives
   inside lavish: polls are safe to stop and re-run; each payload is
@@ -180,12 +185,12 @@ log_payload() { # outcome exit payload
 # whose wrapper died sits in that run's inflight file. Fold any such
 # feedback into the log and return it as this run's result. A file is
 # touched only once its writer has demonstrably finished: the wrapper
-# pid in the name must be dead (a live run may spawn further slices)
+# pid in the name must be dead (a live run may still spawn its poll)
 # AND no process may still hold the file open (lsof) - the poll child
 # keeps the file open as stdout for its whole life, so an orphaned or
 # stalled child, however long it lingers, is skipped rather than
 # unlinked under it. A child forked but not yet holding the file
-# reopens the path - not a removed inode - on its next slice write, so
+# opens the path - not a removed inode - when it starts writing, so
 # even that window cannot lose a payload.
 recovered=""
 for f in "$dir"/inflight.*; do
@@ -211,16 +216,16 @@ if [ -n "$recovered" ]; then
   exit 0
 fi
 
-# The wait is sliced into short server-side polls so that a poll whose
-# client dies uncleanly (SIGKILL leaves the lavish-axi child orphaned)
-# holds the session for at most one slice; the orphan's delivery still
-# lands in the inflight file above. Each slice also runs under a
-# client-side deadline, because lavish's --timeout-ms only bounds the
+# Use one server-side poll for the requested wait. Ending an intermediate
+# poll clears lavish's browser-disconnect timer, so slicing the wait can
+# hide a disconnect even after its reconnect grace has elapsed.
+# A poll orphaned by SIGKILL can hold the session until its server timeout;
+# its delivery still lands in the inflight file above. The poll also runs
+# under a client-side deadline, because --timeout-ms only bounds the
 # server-side wait - server startup and the poll request itself would
 # otherwise hang unboundedly if the server stops responding.
 # SIGTERM/SIGINT tear the child down promptly, which closes its
 # connection before delivery, so lavish requeues.
-slice_ms=5000
 grace_s=10
 child=""
 inflight="$dir/inflight.$(date +%s).$$"
@@ -289,27 +294,12 @@ poll_once() { # cap_s, then lavish-axi poll args
   poll_exit=$rc
 }
 
-status=""
-first=1
-deadline=$(( $(date +%s) + timeout_s ))
-while :; do
-  remain_ms=$(( (deadline - $(date +%s)) * 1000 ))
-  if [ "$remain_ms" -le 0 ]; then
-    break
-  fi
-  this_ms=$slice_ms
-  if [ "$remain_ms" -lt "$this_ms" ]; then this_ms=$remain_ms; fi
-  poll_args=("$html" --timeout-ms "$this_ms")
-  if [ "$first" -eq 1 ] && [ -n "$reply" ]; then
-    poll_args+=(--agent-reply "$reply")
-  fi
-  first=0
-  poll_once "$(( this_ms / 1000 + grace_s ))" "${poll_args[@]}"
-  status="$(session_status "$out")"
-  if [ "$poll_exit" -ne 0 ] || [ "$status" != "waiting" ]; then
-    break
-  fi
-done
+poll_args=("$html" --timeout-ms "$(( timeout_s * 1000 ))")
+if [ -n "$reply" ]; then
+  poll_args+=(--agent-reply "$reply")
+fi
+poll_once "$(( timeout_s + grace_s ))" "${poll_args[@]}"
+status="$(session_status "$out")"
 
 # A payload that reached the inflight file wins over the exit code:
 # even a watchdog-killed poll may have received feedback first.
