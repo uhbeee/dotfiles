@@ -62,10 +62,11 @@ Hard rules, regardless of who fills which seat:
 - The human gates everything at the pause points and owns landing the
   work: no agent commits, pushes or opens a pull request on its own
   initiative, and nothing reaches the default branch except through a
-  pull request - never a direct push. Commits are the human's. On their
-  explicit go the orchestrator may push the work branch and open the PR
-  for them - and opening it is where the agent stops: the PR is left
-  for the human to review. Merging takes its own instruction, given
+  pull request - never a direct push. Each of those steps takes the
+  human's explicit go, and a go for one is not a go for the next. On
+  that go the orchestrator may commit, push the work branch and open
+  the PR for them - and opening it is where the agent stops: the PR is
+  left for the human to review. Merging takes its own instruction, given
   after they have seen that PR and naming it. A go to push or open, or
   any earlier or broader word about landing the work, never carries
   merge authorization with it; when in doubt the PR stays open. Spawned
@@ -93,17 +94,36 @@ The orchestrator spawns the executor as a fresh CLI process with the
 `executor` template, then judges the outcome from files only - the
 diff and the worklog tail - never by tailing live output.
 
-- **Session record**: `[session]` entries come in pairs. Immediately
-  before every spawn AND every resume, the orchestrator appends the
-  boundary entry - item, seat, profile, invocation number - which is
-  the classification boundary below. When the CLI reports the session
-  id, the orchestrator appends the id entry - invocation number,
-  session id - which is the resume pointer (a separately-invoked
-  plan-item-review resumes from the item's latest id entry). Codex
-  prints its thread id on the first stdout line, so the id entry can
-  land while the seat still runs; `claude -p` reports it in the JSON
-  result at exit. A boundary with no id entry (a crash before the id
-  was reported) has no resumable session: recovery is a fresh spawn.
+- **Session record**: `[session]` entries come in pairs, for every
+  spawned seat - executor, reviewer, conformance, each panel member -
+  not just the executor. Immediately before every spawn AND every
+  resume, the orchestrator appends the boundary entry - item, seat,
+  profile, invocation number - which is the classification boundary
+  below. When the CLI reports the session id, the orchestrator appends
+  the id entry - seat, invocation number, session id - which is the
+  resume pointer. Codex prints its thread id on the first stdout line,
+  so that entry can land while the seat still runs; `claude -p` reports
+  it only in the JSON result at exit, so for a claude seat the id entry
+  normally lands *after* the seat's own terminal entry. That is the
+  honest record, not a defect - the id is written as soon as it is
+  known, and the entry may say when it was observed. What the record
+  must never do is falsify chronology: no id back-dated to look as if
+  it had been seen earlier, and none reconstructed from anywhere but
+  the CLI's own report. An id that was never reported is simply absent
+  - a boundary with no id entry has no resumable session, and recovery
+  is a fresh spawn, which is also what a crash before the id leaves
+  behind.
+  Resume pointers are per seat, now that every seat has records: an
+  executor resume (ADDRESS, validation, steering, including a
+  separately-invoked plan-item-review) takes the item's latest id entry
+  *whose seat is executor*; a verify round takes that reviewer's own
+  latest id entry, and each panel member resumes from its own. Reading
+  "the item's latest id entry" without filtering by seat will resume
+  the wrong seat, on the wrong CLI - which is why the id entry names
+  the seat.
+  The orchestrator also names itself: at the first boundary of a run it
+  records its own seat and profile, so who orchestrated is read from
+  the worklog rather than guessed from the surrounding prose.
 - **Exit classification**, per invocation, from terminal entries the
   executor wrote after the latest `[session]` boundary - older entries
   are history and never classify a later invocation:
@@ -150,10 +170,13 @@ diff and the worklog tail - never by tailing live output.
 ## The loop (plan-item-review)
 
 1. **REVIEW**: orchestrator spawns the reviewer with the `review-initial`
-   template. Reviewer writes the review file.
+   template, recording the `[session]` pair as for any seat ("The
+   executor seat", Session record). Reviewer writes the review file.
 2. **PAUSE**: orchestrator summarizes the review to the human and waits.
 3. **ADDRESS**: orchestrator resumes the executor session (the item's
-   latest `[session]` id entry) with the `executor-address` template;
+   latest `[session]` id entry *for the executor seat* - the reviewer's
+   id entries sit in the same worklog) with the `executor-address`
+   template;
    the executor fixes and responds to every open item.
 4. **GATE**: before any reviewer round is spent, the orchestrator
    classifies the ADDRESS invocation's exit per "The executor seat"
@@ -162,9 +185,11 @@ diff and the worklog tail - never by tailing live output.
    red follows the validation gate (evidence, resume, cap), not the
    review loop. Only an implemented exit with green validation
    proceeds.
-5. **VERIFY**: orchestrator resumes the same reviewer session with the
-   `review-verify` template. Reviewer closes what is adequately addressed,
-   may add new items for problems the fixes introduced.
+5. **VERIFY**: orchestrator resumes the same reviewer session - that
+   reviewer's own latest id entry, each panel member from its own -
+   with the `review-verify` template. Reviewer closes what is
+   adequately addressed, may add new items for problems the fixes
+   introduced.
 6. Back to 2. An item still open after 3 verify rounds is a genuine
    disagreement: stop, tag it `[escalated]`, and hand it to the human.
 7. When every item is closed, run `plan-conformance-pass` for the work
@@ -242,7 +267,11 @@ codex-cli 0.153.4 and claude code. Run from the repo root.
   `--dangerously-bypass-approvals-and-sandbox`.
 - Executor seat: the same commands and grant - `workspace-write` is
   already full write + exec within the tree, which is what an executor
-  needs.
+  needs, with one real gap: nix builds fail inside it for an executor
+  seat exactly as they do for a reviewer (the fetcher's lock is denied),
+  so a codex executor cannot run a validation line that builds. See
+  "When the executor's sandbox cannot validate" below before working
+  around it.
 - Interactive asks from the orchestrator seat: codex's native picker is
   `request_user_input`, gated behind the under-development feature flag
   `default_mode_request_user_input` - without it the tool is absent from
@@ -288,6 +317,48 @@ Adding a profile for another agent CLI means adding a section here: a new
 command, a resume command, and where its session id lives. The protocol
 does not change.
 
+### When the executor's sandbox cannot validate
+
+A seat whose sandbox cannot run a command the item requires (today: a
+codex executor on anything that builds with nix, or any command needing
+privilege) does not get a wider grant, and does not guess the result.
+The handoff runs on the existing rails, in this order:
+
+1. **The executor blocks.** A command it cannot run is a wall like any
+   other: it appends a `[blocker]` naming the exact command lines it
+   needs run and what it will do with each outcome, and stops. It never
+   skips the check, and never reports work as verified on the strength
+   of a command it could not run.
+2. **The human decides.** That blocked exit goes to the human like
+   every other one - no auto-resume - and their authorization to run
+   the commands is a `[decision]`. This is what makes the handoff
+   deliberate rather than an orchestrator improvising around a wall.
+3. **The orchestrator runs exactly those commands**, nothing adjacent,
+   and appends a `[validation]` entry with the command, exit code and
+   enough output for someone else to act on it - whether it passed or
+   failed.
+4. **The executor is resumed with `executor-resume-steering`**, the
+   template for continuing after a `[decision]` resolves a blocker,
+   pointing at that entry. Not `executor-resume-validation`, which is
+   for an `[implemented]` exit that then failed its gate - a different
+   situation. The entry is the result: the executor works from what it
+   records and does not re-run the impossible command. If the fix needs
+   another privileged run, that is another `[blocker]`, and the cycle
+   repeats through the human.
+
+Later gate runs of the same line stay with the orchestrator for the
+same reason, recorded the same way.
+
+The boundary is narrow and worth stating twice: the orchestrator runs
+commands and records results. Reading the failure, diagnosing the
+cause, writing the test or the fix, touching the repository - all the
+executor's. An orchestrator that diagnoses or repairs has stopped
+orchestrating, so any split wider than this needs the human's go, a
+`[decision]` recording it, and a rough-edge note here; it is never a
+precedent. The cleaner escape is an executor profile whose sandbox can
+run the line - a claude executor has no such limit - which is a
+profile choice at spawn time, not a grant to widen.
+
 ## Status
 
 Claude-executes / codex-reviews is the exercised pairing, including the
@@ -304,11 +375,47 @@ confirmed-stale file list), the executor walled with a `[blocker]`
 naming it and changed nothing, the human supplied it as a
 `[decision]`, and a steering resume of the same session implemented
 it (herdr); review loops and item conformance closed clean on both;
-and an orchestrator that authored none of either item's changes. Not
-yet witnessed: an abnormal exit (the classification path is untested
-live). Flipped reviewer seats and multi-reviewer panels (see "Panels"
-and the panel addendum in ROLES.md) remain wired but unexercised;
-expect rough edges the first time and fix them here.
+and an orchestrator that authored none of either item's changes.
+
+A codex orchestrator has since been exercised too: codex orchestrating,
+codex executing, claude reviewing, one plan end to end (bump-lavish-axi,
+2026-09-23, now archived), audited afterwards against its own trail.
+What that run does establish: the review loop and item conformance
+closed on their merits, ~16 orchestrator-run `[validation]` entries
+carry commands, exit codes and store paths, a validation-red was caught
+by the gate and recovered to green through a resume, seven executor
+invocations ended in terminal entries, and nothing was closed without
+the work behind it.
+
+What it does not establish, stated here so the summary is not read for
+more than it is worth:
+
+- The executor was codex under a codex orchestrator. The
+  claude-executor-under-codex-orchestrator pairing - the one some plans
+  name specifically - remains unexercised.
+- Recording was not compliant. Executor invocations got proper
+  boundary/id pairs, but reviewer seats did not: the initial
+  implementation reviewer and the conformance reviewer each got a
+  single combined `[session]` entry (profile and id together, no
+  boundary before the spawn), and the verify rounds' reviewer sessions
+  were named only inside `[handoff]` prose. One executor id entry was
+  also written after its own terminal entry as a reconstruction rather
+  than a report. Seven eventual executor pairs are not the same as a
+  clean record; the session-record rules above were tightened because
+  of this run, not confirmed by it.
+- Seat discipline held in the main, but not everywhere: at the runtime
+  failure the orchestrator wrote the root-cause diagnosis itself, which
+  "When the executor's sandbox cannot validate" now reserves to the
+  executor. That subsection exists because this run improvised the
+  split; the run is the evidence of the problem, not of the fix.
+- That plan's opening decision waived review-surface publishes for its
+  implementation phase, so the publish-at-each-pause lifecycle was not
+  exercised by it either.
+
+Not yet witnessed: an abnormal exit (the classification path is
+untested live). Multi-reviewer panels (see "Panels" and the panel
+addendum in ROLES.md) remain wired but unexercised; expect rough edges
+the first time and fix them here.
 
 Rough edges from the exercise, filed:
 
@@ -319,12 +426,20 @@ Rough edges from the exercise, filed:
   blocked. So `bypassPermissions` on the executor is not the whole
   story; the orchestrator side needs the allow rule and stdin delivery.
 - The codex `workspace-write` sandbox cannot run nix builds (store
-  cache writes are denied), so codex reviewer and conformance seats
-  cannot reproduce build-dependent validation lines; they judge from
-  the orchestrator's gate evidence in the worklog instead.
-- ARTIFACTS.md defines no worklog type for the validation gate's
-  evidence; ad-hoc `[validation]` entries were used and read fine.
-  Candidate for a future ARTIFACTS.md addition.
+  cache writes are denied, and the fetcher's lock with them), so codex
+  reviewer and conformance seats cannot reproduce build-dependent
+  validation lines; they judge from the orchestrator's gate evidence in
+  the worklog instead. The bump-lavish-axi run showed this bites a
+  codex *executor* just as hard: its validation line could not run at
+  all, and the human approved a split where the orchestrator ran the
+  builds and runtime checks. That kept the letter of "the orchestrator
+  implements nothing" while the diagnosis drifted to the orchestrator
+  too - which is why the split is now bounded in "When the executor's
+  sandbox cannot validate" rather than left to judgment.
+- ARTIFACTS.md defined no worklog type for the validation gate's
+  evidence, so ad-hoc `[validation]` entries were used across several
+  plans (~16 in bump-lavish-axi alone) before the type existed. Closed:
+  `[validation]` is now a defined type in ARTIFACTS.md.
 - A `bypassPermissions` executor can out-engineer an intended
   under-context wall: given docs that omitted the needed rebuild, it
   built the target system itself with `--override-input` instead of

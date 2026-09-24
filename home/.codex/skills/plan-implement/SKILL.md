@@ -36,21 +36,25 @@ The steps: read plan.md, breakdown.md and the tail of worklog.md (a
 first); refuse to implement unless plan.md's status is approved; confirm
 the next pending item whose blocking edges are all done with the user -
 required input, so a plain question - offering a branch; append the
-[session] boundary entry immediately
-before spawning the executor with the filled `executor` template only
+[session] boundary entry immediately before spawning the executor -
+naming your own seat and profile at the run's first boundary, so the
+worklog records who orchestrated - with the filled `executor` template
+only
 (work item, plan doc paths, review file, worklog), append the id entry
 as soon as the CLI reports the session id, and capture stdout to a temp
 log you name to the user, without tailing it; classify the exit per the
 protocol (blocked and abnormal go to the user); on implemented, run the
-item's validation line yourself - red appends the evidence to the
-worklog and resumes the executor with `executor-resume-validation`,
+item's validation line yourself, recording command and outcome as a
+[validation] worklog entry whether it passed or not - red resumes the
+executor with `executor-resume-validation` pointing at that entry,
 three validation-red resumes on one item without green escalates to the
 user, and `human:` validation lines go to the user, never to the
 executor; when the exit criteria pass, run the
 plan-item-review skill as the gate and then the plan-sync skill; and
 write a [handoff] worklog entry at any natural stopping point. Never
-commit or push on your own initiative; the user owns the commits, and
-only their explicit go lets you push the work branch and open the PR,
+commit, push, or open a PR on your own initiative - each takes the
+user's explicit go, and a go for one is not a go for the next; on that
+go you may commit, push the work branch and open the PR,
 which you then leave open for them to review - merging takes their
 separate word on that PR, after they have seen it (PROTOCOL.md,
 "Seats").

@@ -22,14 +22,18 @@ Steps:
 2. **Stamp.** Write `ARCHIVED.md` into the plan directory per
    ARTIFACTS.md: source repo path and remote, the items' commit range,
    created / approved / archived dates, outcome against the plan's
-   Intent, and the plan-skills core version.
+   Intent, and the plan-skills core version. Report what the worklog
+   recorded, never better: a check it left partial or unverified is
+   stamped partial or unverified.
 3. **Move.** The destination is
    `<archive repo>/<source repo name>/<plan_name_slug>/`. If it already
    exists, stop and ask - the archive is append-only, and nothing is
    copied, overwritten, or removed until the human resolves the
    collision. Otherwise copy the plan directory there, append one index
-   line to the archive repo's README.md, and verify the copy is
-   complete before touching the source.
+   line to the archive's single index - the repo's top-level README.md
+   unless an index already exists elsewhere, which then wins; never
+   start a second - and verify the copy is complete before touching the
+   source.
 4. **Tombstone.** Append the one-line pointer to the source repo's
    `docs/plans/ARCHIVE.md` and remove the plan directory.
 5. **Report** both sides. The human owns the commit in each repo;

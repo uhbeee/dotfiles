@@ -48,7 +48,8 @@ Ordered work items. Each carries: goal, blocking edges (the items that
 must land first; none means it can start now), validation, exit
 criteria, and status (`pending` | `in progress` | `reviewed` |
 `done <commit>`). `reviewed` means the item passed its review loop and
-awaits the human's commit; only an existing commit makes it
+awaits its commit - the human's call, made by them or by the
+orchestrator on their explicit go; only an existing commit makes it
 `done <commit>`. That commit is the one on the work branch: items are
 `done` before the branch merges, since landing on the default branch is
 always a pull request, and no agent merges one until the human has
@@ -85,8 +86,23 @@ Append-only, chronological. One entry per line or short block:
   orchestrator as a pair: a boundary entry immediately before the
   spawn (item, seat, profile, invocation number - the executor
   exit-classification boundary) and an id entry once the CLI reports
-  the session id (invocation number, session id - the resume pointer).
-  See PROTOCOL.md, "The executor seat".
+  the session id (seat, invocation number, session id - the resume
+  pointer, looked up by seat). Every spawned seat gets the pair,
+  reviewers and conformance seats included, and the orchestrator names
+  its own seat and profile at the run's first boundary so the trail
+  says who orchestrated. The id entry is written as soon as the id is
+  known, which for `claude -p` is after that seat's own terminal entry,
+  since the CLI reports it only at exit - that is truthful recording.
+  What is barred is falsifying the order: an id back-dated to look
+  earlier than it was seen, or reconstructed from anything but the
+  CLI's report. An id never reported is left absent. See PROTOCOL.md,
+  "The executor seat".
+- `[validation]` - the orchestrator's own evidence from running a
+  breakdown item's validation line: the command, the outcome, and
+  enough of the output (exit codes, store paths, the failing lines) to
+  judge it later. Written by the orchestrator, never by a seat, and
+  written whether the line passed or failed - a gate with no
+  `[validation]` entry is a gate nobody can check.
 - `[decision]` - a decision made or changed after the plan was written,
   with rationale. Supersede by appending a new entry that references the
   old one; never edit or delete old entries.
@@ -104,7 +120,11 @@ The status in plan.md flips to `approved` only on the human's explicit
 sign-off, recorded as a `[decision]` worklog entry. `plan-implement`
 refuses to run against a plan that is not approved. After approval the
 plan is frozen: changes happen as `[decision]` entries or an explicit
-re-review, never as silent edits.
+re-review, never as silent edits. That covers every section, Open
+questions included: recording the answer to one as it is resolved is
+plan-sync's normal work, but adding, dropping or rewriting the
+questions themselves after approval is a change to the approved plan
+and takes a `[decision]` like any other.
 
 ## Archival
 
@@ -127,10 +147,18 @@ there).
   created / approved / archived dates, a short outcome paragraph
   against the plan's Intent, and the plan-skills core version (the git
   commit of the checkout `~/.config/plan-skills` resolves into, or the
-  nix store path when it does not).
+  nix store path when it does not). The stamp reports what the worklog
+  recorded and never upgrades it: a check the worklog left partial or
+  unverified is written down as partial or unverified, with what is
+  missing. An archive that reads better than the trail behind it is
+  worse than no archive.
 - **Layout**: the plan directory moves to
   `<archive repo>/<source repo name>/<plan_name_slug>/`, and one index
-  line is appended to the archive repo's README.md.
+  line is appended to the archive repo's index. That index is a single
+  file for the whole archive - the repo's top-level README.md unless an
+  index already exists elsewhere, in which case the existing one is
+  authoritative and the new line joins it. Never start a second index;
+  an archive with two is an archive nobody can search.
 - **Append-only**: the archive never loses history. If the destination
   directory already exists (a reused slug, or two source repos sharing
   a basename), stop and ask the human before copying anything; never
