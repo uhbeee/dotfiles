@@ -209,7 +209,10 @@ feed back into a `plan-item-review` round.
 ## Profiles
 
 A profile is a CLI recipe for filling a seat. All verified on
-codex-cli 0.153.4 and claude code. Run from the repo root.
+codex-cli 0.153.4 and claude code. Run from the repo root. The codex
+and claude recipes below are the headless forms; inside herdr the
+herdr-hosted variants further below are selected automatically, and
+everywhere else the headless forms apply unchanged.
 
 ### codex (default reviewer)
 
@@ -243,6 +246,219 @@ codex-cli 0.153.4 and claude code. Run from the repo root.
   permission prompts cannot be answered; the audit trail is the diff
   plus the worklog, and nothing is committed without the human.
   Reviewer seats keep `acceptEdits`.
+
+### herdr-hosted variants
+
+Inside herdr the same seats run as interactive herdr agents in their
+own panes instead of headless processes. Selection is automatic: when
+`test "${HERDR_ENV:-}" = 1` passes and the caller context vars are
+present (`$HERDR_WORKSPACE_ID`, `$HERDR_PANE_ID`), seats are spawned
+per this section; when the check fails (SSH, other machines, plain
+terminals) the headless recipes above apply unchanged. Verified on
+herdr 0.9.0; check `herdr status` before relying on anything newer.
+Everything above the profile layer is untouched: same role templates
+(ROLES.md unchanged), same review-file and worklog rules, same gates.
+The temp-log stdout capture does not apply here - the pane transcript
+is the live record and `herdr agent read <name>` inspects it, so no
+log path is reported. Reading is state-dependent: `--source
+recent-unwrapped --lines <N>` works on a settled-idle seat, but a
+seat that is working, blocked, or unknown rejects any read whose
+`--lines` needs alternate-screen history (`agent_not_idle` - that
+history can only be captured by scrolling while idle); read non-idle
+seats with `--source visible`.
+
+**Naming and panes.** A seat's agent name is unique per item and
+seat among live agents and must match `[a-z][a-z0-9_-]{0,31}`:
+`exec-<item-slug>` and `review-<item-slug>` (panel members
+`review-<reviewer>-<item-slug>`), slug truncated to fit. Names free
+on agent exit, so a replacement spawn reuses its predecessor's name
+once the old pane is gone. Each seat gets its own pane, split from
+the orchestrator's as a sibling:
+
+```bash
+herdr pane split --pane "$HERDR_PANE_ID" --direction right \
+  --cwd <seat working tree> --no-focus
+```
+
+Direction follows the orchestrator pane's geometry (wide splits
+right, tall splits down; `herdr pane layout` tells); the new pane id
+is `.result.pane.pane_id`. Teardown is the orchestrator's: it closes
+only panes it split (`herdr pane close <pane-id>`), and only when the
+seat is finished for good - the item's review loop and conformance
+gate closed, the seat replaced by a fresh spawn (dead pane closed
+first), or the urgent stop (below). A pane whose seat settled with a
+`[blocker]` stays open, carrying its mark (below), until the human's
+steering resume.
+
+**Start.** `herdr agent start <name> --kind <kind> --pane <pane-id>
+-- <native flags>`. The flags after `--` carry the same grants as the
+headless recipes, minus the headless plumbing (no `-p`, no `exec`, no
+`--json`/`--output-format` - ids and state come from herdr):
+
+- claude executor: `-- --permission-mode bypassPermissions`
+- claude reviewer: `-- --permission-mode acceptEdits`
+- codex, either seat: `-- --sandbox workspace-write -c
+  'sandbox_workspace_write.writable_roots=["<abs plan docs dir>"]'` -
+  `workspace-write` confines writes to the seat's tree, and the
+  writable root re-admits the plan directory (review file, worklog)
+  when it lives outside that tree. Model overrides ride the same
+  flags (`-m <model>`, `-c model_reasoning_effort="high"`).
+
+`agent start` returns once the agent is detected and ready for
+input. If it returns `agent_not_ready` (blocked during startup), the
+name still resolves for `agent read` (`--source visible` - the seat
+is not idle) and `agent send-keys`: inspect and surface it like any
+live input wait below - never answer it yourself.
+
+**Prompt via file.** The orchestrator writes the filled role template
+to a file under the plan directory
+(`<plan docs dir>/prompts/<seat name>-inv<N>.md`), so every prompt is
+auditable on disk, then submits a one-liner:
+
+```bash
+herdr agent prompt <name> \
+  "Read and follow your role prompt at <absolute path>." --wait
+```
+
+The prompt text stays a one-liner pointing at the file: `--wait`
+requires observed activity within ~5s of submission, and a fat
+payload risks `agent_prompt_stalled`. On `agent_prompt_stalled` or
+`timeout`, inspect (`agent get`, `agent read`) before deciding
+anything - neither proves the prompt was never delivered; do not
+blindly resubmit. `agent prompt` rejects a seat already parked at a
+dialog with `agent_blocked` before sending any input: that seat is in
+a live input wait, not promptable.
+
+**Wait.** There is no process exit; the invocation ends when the
+agent settles. `--wait` (or a standalone `herdr agent wait <name>`)
+returns on the first settled `idle`, `done`, or `blocked`. Omit
+`--timeout` on seat invocations: after observed activity the
+settled-state wait is indefinite, which is what a long executor run
+needs. Interrupting the orchestrator only abandons its wait - the
+seat runs on in its pane - so an urgent stop follows its own rule
+below.
+
+**Urgent stop.** The human interrupting the orchestrator no longer
+kills the seat: the hosted executor keeps running with whatever build
+or test children it spawned. The hosted urgent stop quiesces the
+tree before enumeration can be trusted - a list snapshotted while
+processes can still fork is incomplete by construction - then kills,
+then verifies, all by process identity (pids), never by matching
+command lines:
+
+1. Read the pane's shell pid from `herdr pane process-info --pane
+   <pane-id>` (`.result.process_info.shell_pid`).
+2. Quiesce: `kill -STOP` the shell pid, then loop - re-snapshot
+   `ps -ax -o pid,ppid`, walk the parent links from the shell pid
+   for descendants not yet listed, `kill -STOP` the newcomers -
+   until a snapshot adds nothing. Stopped processes cannot fork, so
+   the loop converges and the final list is the whole tree: a child
+   forked mid-shutdown surfaces in a later snapshot and is stopped
+   in turn. (`pgrep -P` is not a substitute for the walk - macOS
+   pgrep silently omits the caller's own ancestors.)
+3. `kill -KILL` every listed pid - SIGKILL takes stopped processes,
+   where SIGTERM would sit pending until a SIGCONT that never
+   comes - and verify each is gone (`kill -0 <pid>` fails). Nothing
+   else may write to the tree until the whole list is dead. A pid
+   that will not die, or a tree whose membership cannot be
+   established (a child that already daemonized away from the
+   ancestry walk), keeps the tree closed to writers and goes to the
+   human as the uncertainty it is.
+4. `herdr pane close <pane-id>` on the now-dead pane - the one
+   exception to the teardown timing above; ownership is unchanged,
+   the orchestrator is closing a pane it split. Closing is cleanup
+   here, not the kill: it is never assumed to kill descendants.
+   Herdr may have reaped the pane already when its shell died;
+   `pane_not_found` then just means the cleanup is done.
+
+Record why as a `[decision]` - the headless invariant unchanged. The
+seat and its live session are gone; continuing is a fresh spawn on
+the human's go.
+
+**Blocked is two things**, kept apart at classification time:
+
+- A settled herdr `blocked` is a live input wait: the seat is alive
+  at an approval or question UI. It is never exit-classified. The
+  orchestrator inspects (`herdr agent get <name>`, `herdr agent read
+  <name> --source visible --lines 20` - visible, not
+  recent-unwrapped: a blocked seat rejects alternate-screen-history
+  reads with `agent_not_idle`) and surfaces it to the human; it
+  never answers approval dialogs itself. A substantive
+  answer is recorded as a worklog `[decision]` first, then the seat
+  continues: the human attaches (`herdr agent attach <name>`) or the
+  orchestrator relays the human's exact choice as keys (`herdr agent
+  send-keys <name> <key> ...`), then waits again.
+- A worklog `[blocker]` entry after the boundary with a settled
+  (idle/done) executor keeps its existing meaning: the blocked exit,
+  to the human, never auto-resumed.
+
+**Exit classification** applies to executor invocations and is
+unchanged in substance: when the executor settles idle or done,
+classify from the terminal entries written after the latest
+`[session]` boundary exactly per "The executor seat" - implemented,
+blocked, abnormal (a settled executor with no terminal entry stays
+abnormal). A reviewer invocation is never classified this way: it
+writes no worklog entries, it is complete when it settles idle or
+done, and its output is judged from the review file itself - the
+initial round's checklist, a verify round's closures and notes - as
+in the headless flow. Because an executor's `[blocker]` exit leaves
+the native state reading idle/done, the orchestrator marks the pane
+when it classifies the exit, so the parked blocker stays visible
+while it awaits the human:
+
+```bash
+herdr pane report-metadata <pane-id> --source plan-skills \
+  --state-label idle="blocked: <summary>" \
+  --state-label done="blocked: <summary>" \
+  --token blocked="<summary>"
+```
+
+and clears the mark on the steering resume:
+
+```bash
+herdr pane report-metadata <pane-id> --source plan-skills \
+  --clear-state-labels --clear-token blocked
+```
+
+**Toasts.** When a seat invocation settles after running longer than
+the threshold (default 60s), or settles blocked at any duration, the
+orchestrator - the only party that knows a seat settled - raises:
+
+```bash
+herdr notification show "<seat name>: <settled state>" \
+  --body "<item>: <one-line outcome>" --sound done
+```
+
+(`--sound request` when it settled blocked).
+
+**Session record.** The `[session]` boundary entry is unchanged. The
+id entry records the herdr identities in place of a CLI-reported id:
+agent name, workspace id, pane id, worktree path, and branch. Whether
+a seat also gets its native session id depends on that agent's herdr
+integration (`herdr integration status`): an installed integration
+reports the id through `agent_session`, read live from `herdr agent
+get <name>` (`.agent_session.value`) - no wait-for-exit. The claude
+and codex integrations are both session-identity-only; seat state
+stays screen-detected regardless. On the verified setup claude's is
+installed (v9), so claude seats record the id; codex's is not, so no
+codex thread id is surfaced there and none is recorded - a fact
+about that machine's integrations, not about herdr. Installing it
+(`herdr integration install codex`; it writes under `~/.codex`, so
+it is the human's call) would surface the codex thread id the same
+way and let herdr's own session restore resume the pane
+(`codex resume <id>`). Either way the id is identity for the record:
+recovery stays fresh-spawn per the Resume rule, and scraping
+`~/.codex/sessions` stays out.
+
+**Resume.** While the seat's pane is alive, every resume - ADDRESS,
+validation-red, steering - is another `herdr agent prompt <name> ...
+--wait` to the same live agent, the resume template delivered the
+same via-file way: the interactive session is its own continuity, no
+resume flags. If the pane or agent is gone, recovery is a fresh spawn
+with the full template for either kind: new pane, new `agent start`,
+the reconciliation rule picking up the partial work from the tree,
+review file, and worklog. The recorded claude session id identifies
+the lost session in the record; it does not authorize resuming it.
 
 Adding a profile for another agent CLI means adding a section here: a new
 command, a resume command, and where its session id lives. The protocol
