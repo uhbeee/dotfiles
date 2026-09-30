@@ -33,14 +33,30 @@ Non-negotiables, restated from the protocol:
   step: classify the ADDRESS exit (blocked and abnormal go to the
   human) and re-run the item's validation line after every implemented
   exit, unconditionally - red follows the validation gate (evidence,
-  resume, cap), never a reviewer round.
+  resume, cap), never a reviewer round. Run that validation where the
+  work is: the plan checkout when the plan has a worktree workspace.
+- When the item belongs to a plan with a worktree workspace, every
+  seat of this loop - reviewer, the executor it resumes, the
+  conformance seat - is hosted there, per PROTOCOL.md "The plan
+  workspace": locate the workspace by the plan branch (reusing,
+  opening, or recreating it as that section's arms direct - a review
+  invoked on its own may be the first thing to touch the plan this
+  session), split each seat's pane from the workspace's pane with the
+  plan checkout as cwd, and never open a second workspace for the
+  review. The review file and worklog stay in the plan directory in
+  the primary checkout, which is what the codex writable root
+  re-admits. Advance the workspace status token at each round and
+  pause so the panel shows where the loop is.
 - Never edit the reviewer's text or close an item yourself.
 - Pause and report to the human after every reviewer round (the initial
   review and each verify), before acting on it.
-- Capture each seat invocation's stdout to a temp log and tell the
-  human where it is. Save the codex thread id from the first
-  `thread.started` line (or the claude `session_id`); later rounds
-  resume it.
+- Record how to reach each seat invocation again: headless, capture its
+  stdout to a temp log and tell the human where it is, and save the
+  codex thread id from the first `thread.started` line (or the claude
+  `session_id`) for later rounds to resume; hosted, the pane
+  transcript is the record (`herdr agent read`, `--source visible`
+  unless the seat is settled idle) and the live agent is its own
+  continuity, so later rounds are another prompt to the same name.
 - Three verify rounds on the same item without closure means escalate to
   the human, not another round.
 - When all items are closed, invoke the `plan-conformance-pass` skill for

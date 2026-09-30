@@ -136,6 +136,15 @@ diff and the worklog tail - never by tailing live output.
   resumes alike end with a terminal entry (`[implemented]` or
   `[blocker]`) after their boundary, so classification works the same
   in every round - including ADDRESS.
+- **Where the seat runs**: headless, the seat's cwd is the repo root
+  the orchestrator was invoked from. Inside herdr, a plan's seats are
+  hosted in that plan's worktree workspace and share its checkout
+  across every item and every invocation, located each time by the
+  plan branch and recovered rather than recreated; the orchestrator's
+  own validation and diff inspection move into that checkout too,
+  while the plan documents stay in the primary checkout. The full
+  lifecycle - creation, the recovery arms, status tokens, the teardown
+  gate - is "The plan workspace" under Profiles.
 
 ## The loop (plan-item-review)
 
@@ -273,7 +282,9 @@ seat among live agents and must match `[a-z][a-z0-9_-]{0,31}`:
 `review-<reviewer>-<item-slug>`), slug truncated to fit. Names free
 on agent exit, so a replacement spawn reuses its predecessor's name
 once the old pane is gone. Each seat gets its own pane, split from
-the orchestrator's as a sibling:
+the orchestrator's as a sibling - or, when the plan has a worktree
+workspace, from that workspace's pane instead ("The plan workspace"
+below):
 
 ```bash
 herdr pane split --pane "$HERDR_PANE_ID" --direction right \
@@ -459,6 +470,157 @@ with the full template for either kind: new pane, new `agent start`,
 the reconciliation rule picking up the partial work from the tree,
 review file, and worklog. The recorded claude session id identifies
 the lost session in the record; it does not authorize resuming it.
+
+### The plan workspace
+
+Inside herdr a plan gets one worktree workspace on one branch,
+`plan/<slug>` (the plan directory's own slug), created at the plan's
+first work item and persisting as the plan's home across items, human
+pauses, and orchestrator invocations. Hosted seats run there; the
+orchestrator runs its validation and diff inspection in that checkout.
+Plan documents stay in the primary checkout - the checkout the plan
+directory lives in, where the human works - and are written there by
+absolute path, codex seats via the writable root above. Outside herdr
+none of this applies: the classic single-checkout flow is unchanged
+and what the orchestrator offers at an item is a plain branch.
+
+**The branch is the only durable identity.** Workspace ids are not
+stable across teardown or restarts, and a checkout path can resolve
+through symlinks (`/tmp` vs `/private/tmp`), so neither is a lookup
+key. Every lookup is one command against the primary checkout:
+
+```bash
+herdr worktree list --cwd <primary checkout>
+```
+
+matched on `.result.worktrees[] | select(.branch == "plan/<slug>")`.
+
+**The default branch** is needed twice - `--base` at creation, and the
+containment half of the teardown gate - and both times it means the
+primary checkout's *local* default branch, `refs/heads/<default
+branch>`. Resolve it once:
+
+```bash
+remote=origin
+name=$(git symbolic-ref --short "refs/remotes/$remote/HEAD")
+name=${name#"$remote/"}
+git rev-parse --verify "refs/heads/$name"
+```
+
+The remote HEAD supplies the name and nothing else. `git symbolic-ref
+--short refs/remotes/origin/HEAD` prints `origin/main`, a
+remote-tracking ref rather than a local branch, so substituting that
+string whole is wrong for both uses: it would base the plan branch on
+the last fetched remote tip instead of the checkout's own HEAD, and it
+would make teardown test remote history instead of the human's local
+merge. The two differ by whatever has been fetched and not merged,
+which is the normal state of a checkout rather than an edge case
+(`git rev-list --left-right --count <default branch>...<remote>/<default branch>`
+shows by how much). If the remote HEAD is unset, the remote is not
+named `origin`, or `refs/heads/$name` does not resolve, the default branch
+is confirmed with the human and never guessed. Everything below uses
+the resolved local ref.
+
+**Creation**, at the plan's first item only:
+
+```bash
+herdr worktree create --cwd <primary checkout> \
+  --branch plan/<slug> --base refs/heads/<default branch> \
+  --label "<plan name>" --no-focus
+```
+
+`--base` pins where the plan branch starts, and it takes the local ref
+resolved above - fully qualified, so a tag or remote-tracking ref
+sharing the name cannot win the lookup.
+Herdr chooses the checkout path; read it and the ids to record from the
+response - `.result.worktree.path`,
+`.result.workspace.workspace_id`, `.result.root_pane.pane_id` - rather
+than predicting them. If the primary checkout is not itself open as a
+workspace, herdr opens it too, as the group's source workspace: the
+orchestrator did not ask for it and never closes it.
+
+**Recovery**, on every later invocation - the lookup first, a second
+create never. Four arms, one discriminator each:
+
+| Lookup result | Action |
+|---|---|
+| Entry with `open_workspace_id` | Reuse that workspace as it is. |
+| Entry without `open_workspace_id` (checkout on disk, not open) | `herdr worktree open --cwd <primary checkout> --branch plan/<slug> --label "<plan name>" --no-focus` (`--path <checkout>` from the same entry is equivalent; the branch keeps one key for all four arms) |
+| No entry, and `git rev-parse --verify plan/<slug>` succeeds (checkout removed, branch survived) | The creation command above, without `--base` |
+| No entry and no branch | The plan's first item: create per above. |
+
+Two behaviors hold those arms apart. A branch with no checkout does not
+appear in `worktree list` at all, so git, not herdr, answers whether
+the branch still exists; and `worktree open` needs an existing
+checkout, returning `worktree_not_found` on a branch without one -
+that is the third arm's signal, not an error to retry. On an existing
+branch `worktree create` reuses it at its own tip and ignores `--base`,
+which is what makes the third arm safe.
+
+**Seat hosting.** A seat pane in a plan workspace is a sibling of that
+workspace's pane, not of the orchestrator's - the orchestrator
+normally sits in the primary workspace, and a seat split from its pane
+would land in the wrong repo checkout:
+
+```bash
+herdr pane split --pane <plan workspace pane> --direction right \
+  --cwd <plan checkout> --no-focus
+```
+
+Direction follows `herdr pane layout --pane <plan workspace pane>` as
+in "Naming and panes"; the workspace's root pane stays a plain shell,
+the anchor and the human's way in, so seats never take it over.
+Everything else - naming, `agent start`, prompt via file, the settled
+wait, exit classification, both kinds of blocked, toasts, pane
+teardown - is unchanged.
+
+**Status tokens.** `workspace report-metadata` carries tokens only;
+`--state-label` belongs to `pane report-metadata`, not here. The
+orchestrator reports the plan's coarse state whenever it changes:
+
+```bash
+herdr workspace report-metadata <workspace-id> --source plan-skills \
+  --token status="<item> - <phase>"
+```
+
+with phase naming the gate the plan is at: `executor running`,
+`validation`, `review round <N>`, `awaiting human`, `conformance`,
+`reviewed - awaiting commit`, `done`. Whether a given herdr build's
+panels render workspace tokens or only labels is worth confirming
+visually once; the label carries the plan name either way.
+
+**Teardown** is one command, and it is earned:
+
+```bash
+herdr worktree remove --workspace <workspace-id>
+```
+
+It closes the workspace, deletes the checkout, and always leaves the
+branch. Two ways to earn it and no third:
+
+- **Plan completion**: every breakdown item is `done <commit>` AND the
+  plan branch tip is contained in the local default branch
+  (`git merge-base --is-ancestor plan/<slug> refs/heads/<default
+  branch>`, from the primary checkout - never
+  `<remote>/<default branch>`, since what is being asked is whether
+  the human's own merge has happened in this checkout, and a remote
+  tip that has not taken the plan branch would refuse teardown
+  forever). Both halves are load-bearing: an earlier merge while items
+  are still open fails the first, and after the last item's commit the
+  tip has moved past any earlier merge, so the second fails until the
+  human integrates that final state.
+- **Abandonment**: an explicit human `[decision]` in the worklog.
+  Nothing else substitutes for it.
+
+Before removing, confirm every seat has settled and its pane is
+closed. `worktree remove` closes the workspace's panes whatever is
+running in them: a live seat or a running build dies silently, with no
+refusal to catch the mistake. A checkout with uncommitted or untracked
+files does refuse, with `dirty_worktree_requires_force`, and `--force`
+discards that work - so the orchestrator shows the human
+`git status --porcelain` from the checkout and forces only on their
+word. Never `workspace close --group`: that takes the primary
+workspace with it.
 
 Adding a profile for another agent CLI means adding a section here: a new
 command, a resume command, and where its session id lives. The protocol
