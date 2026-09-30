@@ -38,7 +38,7 @@ Non-negotiables, restated from the protocol:
 - When the item belongs to a plan with a worktree workspace, every
   seat of this loop - reviewer, the executor it resumes, the
   conformance seat - is hosted there, per PROTOCOL.md "The plan
-  workspace": locate the workspace by the plan branch (reusing,
+  workspace": locate the workspace by the work branch (reusing,
   opening, or recreating it as that section's arms direct - a review
   invoked on its own may be the first thing to touch the plan this
   session), split each seat's pane from the workspace's pane with the
