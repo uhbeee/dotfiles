@@ -26,21 +26,26 @@ Steps:
 3. **Confirm.** Propose the next pending item whose blocking edges are
    all satisfied; confirm it with the human. A blocking edge on a plan
    with a worktree workspace is satisfied only when the blocker's
-   `done <commit>` exists and that commit is on the plan branch
-   (`git merge-base --is-ancestor <commit> plan/<slug>`); a `reviewed`
+   `done <commit>` exists and that commit is on the work branch
+   (`git merge-base --is-ancestor <commit> work/<slug>`); a `reviewed`
    blocker with no commit refuses the successor, and the refusal goes
    to the human, who owns the commit. In the classic single-checkout
    flow the rule is unchanged: blocking edges `done`.
 4. **Workspace.** Inside herdr, establish the plan's home per
    PROTOCOL.md "The plan workspace" before spawning anything: one
-   `herdr worktree list --cwd <primary checkout>` lookup by plan
+   `herdr worktree list --cwd <primary checkout>` lookup by work
    branch, then reuse, `worktree open`, or `worktree create` on a
-   surviving branch. At the plan's first item there is nothing to
-   recover, and this replaces the bare branch offer:
+   surviving branch. An open workspace is not proof it still points at
+   the checkout: if the branch was renamed or the checkout moved, its
+   recorded `checkout_path` is stale, so re-open by branch to rebind
+   it rather than trusting it - passing the stale path as a seat's
+   `--cwd` silently roots that seat outside the repo. At the plan's
+   first item there is nothing to recover, and this replaces the bare
+   branch offer:
 
    ```bash
    herdr worktree create --cwd <primary checkout> \
-     --branch plan/<slug> --base refs/heads/<default branch> \
+     --branch work/<slug> --base refs/heads/<default branch> \
      --label "<plan name>" --no-focus
    ```
 

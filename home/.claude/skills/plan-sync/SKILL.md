@@ -20,11 +20,11 @@ Steps:
 2. **breakdown.md**: set the item's status - `reviewed` while the
    human has not committed yet, `done <commit>` once the commit exists;
    never mark done without one. On a plan with a worktree workspace
-   that commit is the plan-branch commit that delivered the item,
+   that commit is the work-branch commit that delivered the item,
    identified with the human (one item can land as more than one
-   commit, and the plan branch carries other items' commits too);
+   commit, and the work branch carries other items' commits too);
    confirm it is on the branch with
-   `git merge-base --is-ancestor <commit> plan/<slug>` before writing
+   `git merge-base --is-ancestor <commit> work/<slug>` before writing
    it, because that is exactly what a successor's blocking edge will
    check. In the classic single-checkout flow the rule is unchanged.
    Note on the item where the implementation deviated from the drafted
