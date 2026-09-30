@@ -7,3 +7,4 @@
 - cross-platform-migration - archived 2026-09-18 to ~/workspace/github/ZK/plans/dotfiles/cross-platform-migration/ - final commit 69de918
 - windows-debloat - archived 2026-09-19 to ~/workspace/github/ZK/plans/dotfiles/windows-debloat/ - final commits dotfiles e900174, machines 2d8eaca
 - bump-lavish-axi: archived 2026-09-23 to ZK/plans/dotfiles/bump-lavish-axi/ - final commit 7365c56
+- lavish-review-surface - archived 2026-09-29 to ~/workspace/github/ZK/plans/dotfiles/lavish-review-surface/ - final commit 180d78e
