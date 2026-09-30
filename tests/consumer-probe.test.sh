@@ -95,6 +95,13 @@ cat > "$probe/flake.nix" <<EOF
       # PATH fallback below.
       homeConfigurations."solveig" = mkWith "aarch64-linux" "solveig" "/home/solveig" "cli"
         [ { nix.assumeXdg = true; xdg.stateHome = "/var/lib/oddstate"; } ];
+      # Content fixture for the stripped Claude settings, read below. Darwin
+      # with the herdr flag forced off, so the derivation builds on a Mac
+      # without a Linux builder; the strip itself is platform-independent.
+      # Nothing asserts platform *selection* from this fixture - the flag it
+      # overrides is exactly what the selection checks read.
+      homeConfigurations."noor" = mkWith "aarch64-darwin" "noor" "/Users/noor" "cli"
+        [ { dotfiles.claude.herdrHook = nixpkgs.lib.mkForce false; } ];
     };
 }
 EOF
@@ -261,16 +268,80 @@ if seed="$(cd "$probe" && nix eval --raw --impure \
   esac
   def="$(printf '%s\n' "$seed" | sed -n "s/^default=//p" | head -1 | tr -d \')"
   if [ -f "$def" ]; then
-    case "$(scan "herdr-agent-state.sh" "$def")" in
-      MATCH) ok "delia: darwin seed carries the guarded herdr hook";;
-      CLEAN) bad "delia: darwin seed lost the herdr hook";;
-      *)     bad "delia: darwin seed content scan could not complete";;
-    esac
+    for hook in herdr-agent-state.sh subagent-pane-metadata.sh; do
+      case "$(scan "$hook" "$def")" in
+        MATCH) ok "delia: darwin seed carries the guarded $hook hook";;
+        CLEAN) bad "delia: darwin seed lost the $hook hook";;
+        *)     bad "delia: darwin seed content scan could not complete";;
+      esac
+    done
   else
     bad "delia: darwin seed source not readable at $def"
   fi
 else
   bad "delia: claude seed script eval failed"
+fi
+
+# The hook script the darwin settings call travels with them, and only there:
+# a portable consumer must get neither the entries nor the file. Eval-only, so
+# it holds on any runner.
+check_subagent_hook() { # check_subagent_hook <config> <want true|false> <label>
+  local got
+  if ! got="$(cd "$probe" && nix eval --json --impure \
+      ".#homeConfigurations.$1.config.home.file" --apply \
+      'f: f ? ".claude/hooks/subagent-pane-metadata.sh"')"; then
+    bad "$1: subagent hook link eval failed"
+    return
+  fi
+  if [ "$got" = "$2" ]; then ok "$1: $3"; else bad "$1: $3 - got $got"; fi
+}
+check_subagent_hook delia true "darwin consumer links the subagent reporting hook"
+check_subagent_hook linnea false "linux consumer gets no subagent reporting hook"
+
+# The stripped settings by content, not by selection: the checks above pin
+# which file each platform seeds, never what survives inside it. Realise the
+# derivation and read it, so a hook entry the jq filter fails to remove
+# cannot reach a portable consumer unnoticed - the filter matches on the
+# script a hook group runs, so this covers every event any of them is wired
+# to. Enumerated out of the fixture's derivation closure by name: the file is
+# built during evaluation and referenced only from the seed script, so there
+# is no attribute path to build it by.
+if noor_drv="$(cd "$probe" && nix eval --raw --impure \
+    ".#homeConfigurations.noor.config.home.activationPackage.drvPath")"; then
+  portable_drv="$(nix-store --query --requisites "$noor_drv" \
+    | grep -- '-claude-settings-portable.json.drv$' | head -1)"
+  if [ -z "$portable_drv" ]; then
+    bad "noor: portable claude settings derivation not found in the closure"
+  elif ! portable="$(nix build --no-link --print-out-paths "$portable_drv^out")"; then
+    bad "noor: portable claude settings derivation builds"
+  else
+    ok "noor: portable claude settings derivation builds"
+    hooktrace=0
+    for pat in herdr-agent-state.sh subagent-pane-metadata.sh '"hooks"'; do
+      case "$(scan "$pat" "$portable")" in
+        MATCH) bad "noor: stripped settings still carry $pat"; hooktrace=1;;
+        CLEAN) ;;
+        *)     bad "noor: stripped settings scan for $pat could not complete"; hooktrace=1;;
+      esac
+    done
+    if [ "$hooktrace" -eq 0 ]; then
+      ok "noor: stripped settings carry no hook entries"
+    fi
+    # The strip must remove the hooks and nothing else.
+    kept=1
+    for pat in statusLine model theme; do
+      case "$(scan "$pat" "$portable")" in
+        MATCH) ;;
+        CLEAN) bad "noor: stripped settings lost $pat"; kept=0;;
+        *)     bad "noor: stripped settings scan for $pat could not complete"; kept=0;;
+      esac
+    done
+    if [ "$kept" -eq 1 ]; then
+      ok "noor: stripped settings keep the non-hook preferences"
+    fi
+  fi
+else
+  bad "noor: activation package eval failed"
 fi
 
 # Linux "full" (eval-only): full means the GUI-adjacent *portable* config -
