@@ -16,6 +16,24 @@ live in ROLES.md next to this file; the documents the family maintains -
 the plan directory, worklog, approval gate, review-surface publish
 checkpoints - are defined in ARTIFACTS.md.
 
+**The protocol holds the behavior; the adapters stay thin.** Each agent
+CLI reaches this family through its own adapter - a `plan-<name>`
+skill per member (`~/.claude/skills/plan-<name>/SKILL.md`,
+`~/.codex/skills/plan-<name>/SKILL.md`) - and an adapter's whole job is
+to name the arguments it needs, point its orchestrator at these three
+files, and restate the gates it must not skip. Nothing is reachable
+from one orchestrator and not another: a step, gate, or lifecycle that
+exists in one adapter and not its counterpart is a defect in the one
+that lacks it, whichever way round, and a change to the flow changes
+every adapter or none. What legitimately differs between adapters is
+CLI-specific how, not what - codex's collaboration-mode rules for
+asking, claude's question tool, each CLI's own default reviewer where
+the different-LLM rule forces one - and a difference of that kind says
+so in the adapter. Behavior that would otherwise live in every adapter
+belongs here instead, which is what keeps them thin enough to stay in
+step. Adding a third CLI is a new adapter over this same protocol, not
+a second description of the flow.
+
 ## Seats
 
 - **Orchestrator**: the agent the human is talking to. Drives the
