@@ -36,6 +36,21 @@ synthetic user-agnostic home closure per supported system, so run
 natively on a box of that architecture (the Mac for aarch64-darwin, the
 WSL box for x86_64-linux).
 
+## plan-* skills: one protocol, two adapters
+
+The plan-* behavior lives once, in `home/.config/plan-skills/`
+(PROTOCOL.md, ROLES.md, ARTIFACTS.md). `home/.claude/skills/plan-*` and
+`home/.codex/skills/plan-*` are thin per-CLI adapters over it, and a step,
+gate or lifecycle in one adapter and not its counterpart is a defect in
+the one that lacks it. Touch one, touch both, or move the behavior into
+the protocol: `tests/adapter-parity.test.sh` fails on divergence and its
+header explains what it compares and how a legitimate per-CLI difference
+is registered. It also freezes the remainder of each adapter clause that
+no check covers in `tests/adapter-parity-unpoliced.txt`, so an edit there
+fails until you either register the rule or confirm the counterpart
+adapter carries the same change and regenerate with
+`UPDATE_UNPOLICED=1 bash tests/adapter-parity.test.sh`.
+
 ## Other deliberate decisions - do NOT silently revert them
 
 - `homebrew.onActivation.cleanup = "zap"` in `modules/system/darwin/homebrew.nix`

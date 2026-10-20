@@ -29,8 +29,12 @@ conformance file path (default `<plan docs dir>/<scope_slug>_conformance.md`).
 Ask for whatever is missing rather than guessing.
 
 Run one reviewer invocation, fresh session, with the `conformance`
-template filled and nothing else in the prompt; capture its stdout to a
-temp log. Report the findings and the file path to the user. Findings
-that need acting on become a new plan-item-review round; the user
-decides - a choice with concrete options, so `request_user_input` fits,
-and if it comes back empty you report and stop rather than start one.
+template filled and nothing else in the prompt. Headless, capture its
+stdout to a temp log; when the item belongs to a plan with a worktree
+workspace, the seat is hosted there like every other seat of the loop
+(PROTOCOL.md, "The plan workspace") and the pane transcript is the
+record instead. Report the findings and the file path to the user.
+Findings that need acting on become a new plan-item-review round; the
+user decides - a choice with concrete options, so `request_user_input`
+fits, and if it comes back empty you report and stop rather than start
+one.

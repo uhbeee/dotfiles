@@ -63,11 +63,12 @@ applies: offer a plain branch as before.
 
 The steps: read plan.md, breakdown.md and the tail of worklog.md (a
 [handoff] entry is the previous session's baton - do what it says
-first); refuse to implement unless plan.md's status is approved;
-confirm the next pending item whose blocking edges are all satisfied
-with the user - required input, so a plain question - where a blocking
-edge on a plan with a worktree workspace is satisfied only once the
-blocker's `done <commit>` exists and that commit is on the work branch
+first); refuse to implement unless plan.md's status is approved,
+sending the user to plan-create's sign-off instead; confirm the next
+pending item whose blocking edges are all satisfied with the user -
+required input, so a plain question - where a blocking edge on a plan
+with a worktree workspace is satisfied only once the blocker's
+`done <commit>` exists and that commit is on the work branch
 (`git merge-base --is-ancestor <commit> work/<slug>`), so a `reviewed`
 blocker with no commit refuses the successor and the refusal goes to
 the user, who owns the commit, while the classic single-checkout flow

@@ -32,16 +32,17 @@ Steps:
    to the human, who owns the commit. In the classic single-checkout
    flow the rule is unchanged: blocking edges `done`.
 4. **Workspace.** Inside herdr, establish the plan's home per
-   PROTOCOL.md "The plan workspace" before spawning anything: one
+   PROTOCOL.md "The plan workspace" before spawning anything, and never
+   open a second workspace for a plan that has one: one
    `herdr worktree list --cwd <primary checkout>` lookup by work
-   branch, then reuse, `worktree open`, or `worktree create` on a
-   surviving branch. An open workspace is not proof it still points at
-   the checkout: if the branch was renamed or the checkout moved, its
-   recorded `checkout_path` is stale, so re-open by branch to rebind
-   it rather than trusting it - passing the stale path as a seat's
-   `--cwd` silently roots that seat outside the repo. At the plan's
-   first item there is nothing to recover, and this replaces the bare
-   branch offer:
+   branch, then reuse, `herdr worktree open`, or `herdr worktree
+   create` on a surviving branch. An open workspace is not proof it
+   still points at the checkout: if the branch was renamed or the
+   checkout moved, its recorded `checkout_path` is stale, so re-open by
+   branch to rebind it rather than trusting it - passing the stale path
+   as a seat's `--cwd` silently roots that seat outside the repo. At the
+   plan's first item there is nothing to recover, and this replaces the
+   bare branch offer:
 
    ```bash
    herdr worktree create --cwd <primary checkout> \
@@ -55,8 +56,8 @@ Steps:
    `git symbolic-ref` prints, which is a different commit whenever a
    fetch is unmerged.
    Name the workspace and checkout to the human, set the status token,
-   and from here on run your own validation and diff inspection in
-   that checkout; the plan documents stay in the primary checkout and
+   and from here on run your own validation and diff inspection in the
+   plan checkout; the plan documents stay in the primary checkout and
    are written there by absolute path. Outside herdr, offer a plain
    branch as before.
 5. **Spawn.** Fill the `executor` template - work item, plan doc paths,

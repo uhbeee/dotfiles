@@ -1,0 +1,378 @@
+claude/plan-archive: - archive repo
+claude/plan-archive: - plan directory
+claude/plan-archive: [gate] - and [gate] is complete before touching the source
+claude/plan-archive: [gate] <commit>, latest [gate]
+claude/plan-archive: [gate] of that goes to the human
+claude/plan-archive: a check it left [gate] is stamped [gate]
+claude/plan-archive: an explicit argument overrides it
+claude/plan-archive: Append the [gate] to the source repo's docs/plans/ARCHIVE.md and [gate]
+claude/plan-archive: archiving anyway is their call, [gate] [decision] worklog entry
+claude/plan-archive: Arguments (ask for whatever is missing [gate] ing)
+claude/plan-archive: default is the path in ~/.config/dotfiles-local/plan-archive-root
+claude/plan-archive: If it [gate] - the archive is [gate] , and nothing is copied, overwritten, or removed [gate] the collision
+claude/plan-archive: If neither exists, ask
+claude/plan-archive: No reviewer seat is involved
+claude/plan-archive: Otherwise [gate] , append [gate] to the archive's [gate] - the repo's top-level README.md unless an index already [gate]
+claude/plan-archive: Read ~/.config/plan-skills/ARTIFACTS.md ("Archival") now, then follow it exactly
+claude/plan-archive: remind them the move is [gate] are committed
+claude/plan-archive: Report what the worklog recorded, [gate]
+claude/plan-archive: source repo path and remote, the items' commit range, created / approved / archived dates, outcome against the plan's Intent, and the plan-skills core version
+claude/plan-archive: The destination is [gate] /<plan_name_slug>/
+claude/plan-archive: The human owns the [gate]
+claude/plan-archive: Verify the [gate]
+claude/plan-archive: Write [gate] per ARTIFACTS.md
+claude/plan-archive: You are the orchestrator
+claude/plan-conformance-pass: - conformance file
+claude/plan-conformance-pass: - plan docs
+claude/plan-conformance-pass: - reviewer profile
+claude/plan-conformance-pass: [gate] stdout to a temp log
+claude/plan-conformance-pass: a single work item, or "the entire plan"
+claude/plan-conformance-pass: Arguments (ask for whatever is missing [gate] ing)
+claude/plan-conformance-pass: default <plan docs dir>/<scope_slug>_conformance.md
+claude/plan-conformance-pass: If findings need acting on, that is a [gate] , not something to quietly fix
+claude/plan-conformance-pass: paths to the source-of-truth documents
+claude/plan-conformance-pass: Read that file and ~/.config/plan-skills/ROLES.md now, then follow them exactly
+claude/plan-conformance-pass: Run it as [gate] , [gate] , with the conformance [gate] and [gate]
+claude/plan-conformance-pass: the human decides
+claude/plan-conformance-pass: variants per the protocol's table
+claude/plan-conformance-pass: When it finishes, report the [gate]
+claude/plan-conformance-pass: when the item belongs to a plan with a worktree workspace, the seat is hosted there like every other seat of the loop (PROTOCOL.md, "The plan workspace") and the [gate] instead
+claude/plan-conformance-pass: You are the orchestrator of the conformance audit defined in ~/.config/plan-skills/PROTOCOL.md (section "The audit")
+claude/plan-create: - design-review reviewer profile
+claude/plan-create: - plan directory
+claude/plan-create: - plan name
+claude/plan-create: "Whatever you think is best" gets your recommendation and their [gate]
+claude/plan-create: [gate] , or publish on your own initiative beyond the review surface above
+claude/plan-create: [gate] back into the files per ARTIFACTS.md ("The review surface")
+claude/plan-create: [gate] YYYY-MM-DD, [gate] the [decision] sign-off entry, republish with plan-publish ( [gate] first, per ARTIFACTS.md)
+claude/plan-create: Also ask which executor and implementation-reviewer profiles the plan's items will use (defaults
+claude/plan-create: an edit or a recorded disagreement, [gate]
+claude/plan-create: Arguments (ask for whatever is missing [gate] ing)
+claude/plan-create: Ask too which surfaces the work touches that carry one copy per agent CLI, so each item names [gate] rather than the one path you happen to be in (ARTIFACTS.md, breakdown drafting rules)
+claude/plan-create: Design review loop per PROTOCOL.md ("The design review")
+claude/plan-create: design-review / design-review-verify templates, review file plan_review.md, plan status
+claude/plan-create: do not rush this
+claude/plan-create: Draft plan.md (status
+claude/plan-create: draft) and breakdown.md per ARTIFACTS.md
+claude/plan-create: Every decision lands in plan.md's Decisions [gate]
+claude/plan-create: executor claude, reviewer codex
+claude/plan-create: in design review
+claude/plan-create: intent, pointers to existing context (the human often knows exactly where prior art lives - ask first, search later), [gate] , constraints, dependencies, risks, deadlines, success criteria
+claude/plan-create: must be a different LLM from you (you edit the plan in that loop)
+claude/plan-create: never the [gate] as each other) - they are recorded in the Decisions table, where plan-implement and plan-item-review read them
+claude/plan-create: On the human's [gate]
+claude/plan-create: Pause for the human [gate] , as always
+claude/plan-create: Point the human at plan-implement for the first item
+claude/plan-create: Read ~/.config/plan-skills/PROTOCOL.md, ROLES.md and ARTIFACTS.md now, then follow them exactly
+claude/plan-create: Resolve every ambiguity with AskUserQuestion before drafting anything
+claude/plan-create: the human owns all of that
+claude/plan-create: Up to 4 questions per round, [gate]
+claude/plan-create: what and why, not how
+claude/plan-create: When the loop closes, publish plan.md (and breakdown.md if useful) with plan-publish so it opens in the human's browser, and [gate] with plan-feedback
+claude/plan-create: You address items by editing the plan documents
+claude/plan-create: You are the orchestrator, and the executor of the design review loop
+claude/plan-implement: - executor/reviewer profiles
+claude/plan-implement: - plan directory (and optionally which work item)
+claude/plan-implement: [gate] , or open a PR on your own initiative
+claude/plan-implement: [gate] go to the human
+claude/plan-implement: [gate] per PROTOCOL.md ("The executor seat")
+claude/plan-implement: [gate] process exit with stdout captured to a temp log you name to the human
+claude/plan-implement: A [handoff] entry there is the [gate]
+claude/plan-implement: A blocking edge on a plan with a worktree workspace is satisfied only when the blocker's done <commit> exists and that [gate] (git merge-base --is-ancestor <commit> work/<slug>)
+claude/plan-implement: a reviewed blocker with no commit [gate] , and the [gate] human, who owns the commit
+claude/plan-implement: After that loop closes, [gate]
+claude/plan-implement: An open workspace is [gate] at the checkout
+claude/plan-implement: Append the [gate] entry [gate] the spawn, and the id entry as soon as the CLI reports the session id
+claude/plan-implement: Arguments (ask for whatever is missing [gate] ing)
+claude/plan-implement: At any [gate] , or when the session is running long, write a [handoff] worklog entry before you stop
+claude/plan-implement: At the plan's first item there is [gate] , and this replaces the bare branch offer
+claude/plan-implement: At the run's first boundary name [gate] too, so the worklog records who orchestrated instead of leaving it to inference
+claude/plan-implement: bash herdr worktree create --cwd <primary checkout> \ --branch work/<slug> --base [gate] /<default branch> \ --label "<plan name>" --no-focus Resolve the default branch as that section does - the primary checkout's local [gate] /<default branch>, taking only the branch name from the remote HEAD, never the [gate] string git symbolic-ref prints, which is a different commit whenever a fetch is unmerged
+claude/plan-implement: blocking edges done
+claude/plan-implement: do not implement against an unapproved plan
+claude/plan-implement: do what it says first
+claude/plan-implement: each takes the human's [gate] , and a [gate]
+claude/plan-implement: Executor and reviewer are never the [gate]
+claude/plan-implement: Fill the executor template - work item, plan doc paths, review file path, worklog path - and spawn it per the executor profile (executor grants, per the protocol's profile table)
+claude/plan-implement: from plan.md's Decisions table
+claude/plan-implement: hosted, it is the [gate] , and the [gate]
+claude/plan-implement: If plan.md's [gate] , stop and send the human to plan-create's sign-off
+claude/plan-implement: if the branch was renamed or the checkout moved, its [gate] is stale, so re-open by branch to rebind it rather than trusting it - passing the stale path as a seat's --cwd silently roots that seat outside the repo
+claude/plan-implement: In the [gate] the rule is unchanged
+claude/plan-implement: Inside herdr, establish the plan's home per PROTOCOL.md "The plan workspace" before spawning anything, and never open a [gate] for a plan that has one
+claude/plan-implement: leave it [gate]
+claude/plan-implement: leave it open, with a [gate] the next invocation can read, and say in the [handoff] which branch it is on
+claude/plan-implement: Merging takes their [gate] on that PR, [gate] (PROTOCOL.md, "Seats")
+claude/plan-implement: Name the workspace and checkout to the human, set the [gate] , and from here on run your own validation and diff inspection in the [gate]
+claude/plan-implement: On implemented, run the item's validation line yourself, recording what you ran and what came back as a [validation] [gate]
+claude/plan-implement: On that go you may commit, push the work branch and open the PR for them, then stop
+claude/plan-implement: one herdr worktree list --cwd <primary checkout> lookup by work branch, then reuse, herdr worktree open, or herdr worktree create on a surviving branch
+claude/plan-implement: Outside herdr, offer a [gate]
+claude/plan-implement: per-run override allowed
+claude/plan-implement: plans without recorded profiles fall back to executor claude, reviewer codex, stated at spawn time
+claude/plan-implement: Propose the next pending item whose [gate]
+claude/plan-implement: Read ~/.config/plan-skills/PROTOCOL.md, ROLES.md and ARTIFACTS.md now, then follow them exactly - especially "The executor seat"
+claude/plan-implement: Read plan.md, breakdown.md, and the [gate]
+claude/plan-implement: red means resume the executor with executor-resume-validation pointing at it - [gate] on one item without green escalates to the human
+claude/plan-implement: Tearing it down is plan-sync's gated step, or the human's [decision] to [gate] the plan - never a stopping-point tidy-up
+claude/plan-implement: the plan documents [gate] and are written there by absolute path
+claude/plan-implement: The plan workspace is the plan's home and [gate]
+claude/plan-implement: validation lines go to the human at the pause, [gate]
+claude/plan-implement: Wait for the invocation to end [gate]
+claude/plan-implement: When the [gate] , [gate] for this item
+claude/plan-implement: you [gate]
+claude/plan-implement: You are the orchestrator
+claude/plan-item-review: - [gate] on the same item without closure means escalate to the human, not another round
+claude/plan-item-review: - ADDRESS is the executor's
+claude/plan-item-review: - After ADDRESS and before any VERIFY round, apply the protocol's GATE step
+claude/plan-item-review: - executor/reviewer profiles
+claude/plan-item-review: - Never edit the [gate] or [gate] yourself
+claude/plan-item-review: - Pause and report to the human [gate] (the initial review and each verify), [gate]
+claude/plan-item-review: - plan docs
+claude/plan-item-review: - Record how to reach each seat invocation again
+claude/plan-item-review: - review file
+claude/plan-item-review: - Spawn every seat with its [gate]
+claude/plan-item-review: - When [gate] , invoke the plan-conformance-pass skill for this work item as the [gate]
+claude/plan-item-review: - When the item belongs to a plan with a worktree workspace, every seat of this loop - reviewer, the executor it resumes, the conformance seat - is hosted there, per PROTOCOL.md "The plan workspace"
+claude/plan-item-review: - work item
+claude/plan-item-review: [gate] claude, reviewer codex
+claude/plan-item-review: [gate] goes into any seat's prompt
+claude/plan-item-review: [gate] the reviewer's own latest id entry, not the item's latest
+claude/plan-item-review: a [gate] before every spawn and resume, and an id entry when the CLI reports the id - the codex thread.started line, or the claude session_id - which later rounds resume from
+claude/plan-item-review: a fresh spawn (full executor template) only if the [gate]
+claude/plan-item-review: Advance the workspace [gate] at each round and pause so the panel shows where the loop is
+claude/plan-item-review: Arguments (ask for whatever is missing [gate] ing)
+claude/plan-item-review: capture its stdout to a temp log and tell the human where it is
+claude/plan-item-review: classify the ADDRESS exit ( [gate] go to the human) and re-run the item's validation line [gate] , unconditionally - red follows the validation gate (evidence, resume, cap), never a reviewer round
+claude/plan-item-review: Commits remain the human's call
+claude/plan-item-review: default <plan docs dir>/<work_item_slug>_review.md
+claude/plan-item-review: Either way the reviewer seat gets the [gate] as the executor, not a mention in passing
+claude/plan-item-review: Either way, append the [gate] entry [gate] , and the id entry when the CLI reports it, which for claude -p is after that seat's terminal entry - record it then, honestly, and never [gate] e one to look earlier
+claude/plan-item-review: For [gate] with no plan worklog, name a worklog file with the human first - the executor seat needs one
+claude/plan-item-review: from plan.md's Decisions table when the item belongs to a plan, overridable per run
+claude/plan-item-review: locate the workspace by the work branch (reusing, opening, or recreating it as that section's arms direct - a review invoked on its own may be the first thing to touch the plan this session), split each seat's pane from the workspace's pane with the [gate] as cwd, and never open a [gate] for the review
+claude/plan-item-review: Never the [gate] as each other
+claude/plan-item-review: Non-negotiables, restated from the protocol
+claude/plan-item-review: paths to the source-of-truth documents
+claude/plan-item-review: Read that file, ~/.config/plan-skills/ROLES.md and ~/.config/plan-skills/ARTIFACTS.md now, then follow them exactly
+claude/plan-item-review: resume the item's executor session (its latest [session] id entry whose seat is executor - [gate] in the same worklog and resuming one here would put the review seat on the executor's work) with the executor-address template
+claude/plan-item-review: Run that validation where the work is
+claude/plan-item-review: the [gate] (herdr agent read, --source visible unless the seat is settled idle) and the live agent is its own continuity, so later rounds are another prompt to the same name
+claude/plan-item-review: the [gate] when the plan has a worktree workspace
+claude/plan-item-review: the executor's [gate] the review file response, where the human can audit it
+claude/plan-item-review: The review file and worklog [gate] in the primary checkout, which is what the codex writable root re-admits
+claude/plan-item-review: what was just finished, e.g
+claude/plan-item-review: When this skill runs standalone, name [gate] at the first boundary
+claude/plan-item-review: With claude -p that id [gate] , so its entry lands after the seat's terminal entry
+claude/plan-item-review: write it then, and never [gate] e one to look earlier
+claude/plan-item-review: you [gate]
+claude/plan-item-review: You are the orchestrator of the review loop defined in ~/.config/plan-skills/PROTOCOL.md
+claude/plan-sync: - plan directory (and optionally which work item just landed)
+claude/plan-sync: [gate] ment is the human's [decision], never yours, and --force over a dirty checkout needs their explicit word
+claude/plan-sync: [gate] per ARTIFACTS.md ("The review surface" - [gate] first), and report what changed
+claude/plan-sync: adding, dropping or [gate] themselves after approval changes the approved plan and takes a [decision]
+claude/plan-sync: Anything that would [gate] is the human's call to change, not yours - raise it instead of editing
+claude/plan-sync: append [decision] [gate] not yet recorded
+claude/plan-sync: Arguments (ask for whatever is missing [gate] ing)
+claude/plan-sync: confirm it is on the branch with git merge-base --is-ancestor <commit> work/<slug> before writing it, because that is exactly what a successor's blocking edge will check
+claude/plan-sync: Do not take the session's memory of the work as the record
+claude/plan-sync: Establish what landed
+claude/plan-sync: For a plan with a worktree workspace, the [gate] on the plan branch is where you read the log and the diff
+claude/plan-sync: For a reviewed item, record the state [gate] instead and finish the sync (status flip plus [done]) after the human commits
+claude/plan-sync: git log and diff since the last sync, the item's review file, and what the human confirmed
+claude/plan-sync: In the [gate] the rule is unchanged
+claude/plan-sync: never mark done without one
+claude/plan-sync: Note on the item where the implementation deviated from the drafted scope, and update the [gate]
+claude/plan-sync: On a plan with a worktree workspace that commit is the work-branch commit that delivered the item, [gate] (one item can land as more than one commit, and the work branch carries other items' commits too)
+claude/plan-sync: Read ~/.config/plan-skills/PROTOCOL.md and ~/.config/plan-skills/ARTIFACTS.md now, then follow them exactly
+claude/plan-sync: set the [gate] to where the plan now stands (reviewed - awaiting commit, the next item, or done), then evaluate the [gate] of PROTOCOL.md "The plan workspace" - [gate] <commit> AND the work branch tip contained in the primary checkout's local default branch ( [gate] /<default branch>, resolved as that section directs
+claude/plan-sync: set the item's status - [gate] the human has not committed yet, done <commit> once the commit exists
+claude/plan-sync: Short of both, say so and [gate]
+claude/plan-sync: testing the [gate] instead asks about fetched remote history, not the human's merge)
+claude/plan-sync: that is the [gate]
+claude/plan-sync: The [done] entry means landed - append it [gate] , with the commit and verification
+claude/plan-sync: the [gate]
+claude/plan-sync: the branch survives
+claude/plan-sync: The human [gate]
+claude/plan-sync: update [gate] that got answered and any current state the plan asserts that is no longer true
+claude/plan-sync: When both hold, [gate] that the plan is finished, that every [gate] and its [gate] , and that the [gate] , then herdr worktree remove --workspace <workspace-id>
+claude/plan-sync: Workspace, for a plan with a worktree workspace
+claude/plan-sync: You are the orchestrator
+codex/plan-archive: [gate] is the user's call, [gate] [decision] worklog entry)
+codex/plan-archive: an explicit argument overrides it
+codex/plan-archive: Anything you actually need before you can continue is not that kind of question
+codex/plan-archive: append the [gate] to the source repo's docs/plans/ARCHIVE.md and [gate]
+codex/plan-archive: Archive the finished plan named in the user's request
+codex/plan-archive: ask if neither exists)
+codex/plan-archive: ask it as one concise plain-text question and wait, never as options typed into a message, and never route a permission ask through the tool
+codex/plan-archive: Asking in codex
+codex/plan-archive: check the destination [gate] /<plan_name_slug>/ - if it [gate] - a plain question, since you cannot continue without the answer - as the archive is [gate] and nothing is copied, overwritten, or removed [gate] the collision - then [gate] , [gate] , and append [gate] to the archive's [gate] - the repo's top-level README.md unless an index already [gate] , and [gate] one
+codex/plan-archive: its collaboration-mode rules come first, and a skill does not override them
+codex/plan-archive: No reviewer seat is involved
+codex/plan-archive: Read ~/.config/plan-skills/ARTIFACTS.md ("Archival") now, then follow it exactly
+codex/plan-archive: the answers below are the user's, so a missing one is [gate]
+codex/plan-archive: the move is [gate] are committed
+codex/plan-archive: the path in ~/.config/dotfiles-local/plan-archive-root
+codex/plan-archive: the plan directory, and the archive repo (default
+codex/plan-archive: The user owns the [gate]
+codex/plan-archive: This skill writes files, so it runs in Default mode, where request_user_input is for optional questions whose answer would materially improve the work - one to three per call, prefer one, every question carrying concrete options with your recommendation marked - and an empty return means carry on with your best judgment rather than ask again
+codex/plan-archive: verify the [gate] ( [gate] <commit>, latest [gate]
+codex/plan-archive: What no mode changes
+codex/plan-archive: write [gate] per ARTIFACTS.md (source repo path and remote, the items' commit range, created / approved / archived dates, outcome against the plan's Intent, the plan-skills core version - reporting what the worklog recorded and [gate] , so a [gate] check is stamped as one)
+codex/plan-archive: You are the orchestrator
+codex/plan-archive: You need from the arguments or the user
+codex/plan-conformance-pass: [gate] ), and the conformance file path (default <plan docs dir>/<scope_slug>_conformance.md)
+codex/plan-conformance-pass: [gate] its stdout to a temp log
+codex/plan-conformance-pass: Anything you actually need before you can continue is not that kind of question
+codex/plan-conformance-pass: Ask for whatever is missing [gate] ing
+codex/plan-conformance-pass: ask it as one concise plain-text question and wait, never as options typed into a message, and never route a permission ask through the tool
+codex/plan-conformance-pass: Asking in codex
+codex/plan-conformance-pass: Findings that need acting on become a [gate]
+codex/plan-conformance-pass: its collaboration-mode rules come first, and a skill does not override them
+codex/plan-conformance-pass: Read that file and ~/.config/plan-skills/ROLES.md now, then follow them exactly
+codex/plan-conformance-pass: Report the [gate] to the user
+codex/plan-conformance-pass: Run [gate] , [gate] , with the conformance [gate] and [gate]
+codex/plan-conformance-pass: Run the plan conformance audit for the scope named in the user's request
+codex/plan-conformance-pass: the answers below are the user's, so a missing one is [gate]
+codex/plan-conformance-pass: the scope (one work item, or "the entire plan"), the plan doc paths, the reviewer profile (an agent other than yourself if you did the work
+codex/plan-conformance-pass: the user decides - a choice with concrete options, so request_user_input fits, and if it comes back empty you report and stop rather than start one
+codex/plan-conformance-pass: This skill writes files, so it runs in Default mode, where request_user_input is for optional questions whose answer would materially improve the work - one to three per call, prefer one, every question carrying concrete options with your recommendation marked - and an empty return means carry on with your best judgment rather than ask again
+codex/plan-conformance-pass: What no mode changes
+codex/plan-conformance-pass: when the item belongs to a plan with a worktree workspace, the seat is hosted there like every other seat of the loop (PROTOCOL.md, "The plan workspace") and the [gate] instead
+codex/plan-conformance-pass: You are the orchestrator of the audit defined in ~/.config/plan-skills/PROTOCOL.md (section "The audit")
+codex/plan-conformance-pass: You need from the arguments or the user
+codex/plan-create: [gate] , or publish on your own initiative beyond the review surface above
+codex/plan-create: [gate] , per the protocol's profile table)
+codex/plan-create: a guess that reaches the Decisions table is a defect, and [gate]
+codex/plan-create: an edit or a recorded disagreement, [gate] )
+codex/plan-create: ask for Plan mode before you start interviewing
+codex/plan-create: Ask for whatever is missing [gate] ing
+codex/plan-create: Asking in codex
+codex/plan-create: Create a plan for the work named in the user's request
+codex/plan-create: Drafting the plan documents writes files, which Plan mode forbids, so ask for Default mode once the interview is done and before you draft
+codex/plan-create: Each picker call carries one to three questions (prefer one, and every question needs concrete options with your recommendation marked) - take as many calls as the interview needs
+codex/plan-create: Either way ambiguity is the user's to resolve
+codex/plan-create: every decision lands in plan.md's Decisions [gate]
+codex/plan-create: executor claude, reviewer codex
+codex/plan-create: If the user stays in Default mode, its rules apply instead
+codex/plan-create: interview the user until every ambiguity is resolved (intent, existing context pointers, [gate] , constraints, dependencies, risks, deadlines, success criteria) - at most 3 questions per ask, [gate] , and "whatever you think is best" gets your recommendation plus the user's [gate] , never a silent choice
+codex/plan-create: it also asks which surfaces the work touches that carry one copy per agent CLI, so each item names [gate] rather than the one path you happen to be in (ARTIFACTS.md, breakdown drafting rules)
+codex/plan-create: never the [gate] as each other), recorded in the Decisions table where plan-implement and plan-item-review read them
+codex/plan-create: on their [gate] , [gate] the [decision] entry, and republish with plan-publish ( [gate] first, per ARTIFACTS.md)
+codex/plan-create: Read that file, ~/.config/plan-skills/ROLES.md and ~/.config/plan-skills/ARTIFACTS.md now, then follow them exactly
+codex/plan-create: run the design review loop per PROTOCOL.md ("The design review") with the design-review and design-review-verify templates and review file plan_review.md, pausing for the user [gate]
+codex/plan-create: Say which mode you need and wait
+codex/plan-create: the interview also asks which executor and implementation-reviewer profiles the plan's items will use (defaults
+codex/plan-create: The interview belongs in Plan mode, where request_user_input is the preferred route for any question and codex itself biases toward asking over guessing
+codex/plan-create: the picker is only for optional questions, an empty return means proceed on your best judgment rather than re-ask, and anything you genuinely need is one concise plain-text question at a time - so ask the decisions out one by one and never write multiple choices into a message
+codex/plan-create: the plan name, the plan directory (default docs/plans/<plan_name_slug>/), and the design-review reviewer profile (must be a different LLM from you, since you edit the plan in that loop
+codex/plan-create: the user owns those
+codex/plan-create: Then draft plan.md and breakdown.md per ARTIFACTS.md at [gate]
+codex/plan-create: then publish plan.md (and breakdown.md if useful) with plan-publish for the user's own review, [gate] with plan-feedback, and [gate] back into the files per ARTIFACTS.md ("The review surface"
+codex/plan-create: this skill spans two of its collaboration modes, and only the user switches between them (Shift+Tab) - you cannot, and must not claim to
+codex/plan-create: You are the orchestrator, and the executor of the design review loop, defined in ~/.config/plan-skills/PROTOCOL.md
+codex/plan-create: You need from the arguments or the user
+codex/plan-implement: [gate] - required input, so a plain question - where a blocking edge on a plan with a worktree workspace is satisfied only once the blocker's done <commit> exists and that [gate] (git merge-base --is-ancestor <commit> work/<slug>), so a reviewed blocker with no commit [gate] and the [gate] user, who owns the commit, while the [gate] keeps the unchanged rule of blocking edges done
+codex/plan-implement: [gate] , or open a PR on your own initiative - each takes the user's [gate] , and a [gate]
+codex/plan-implement: [gate] per the protocol ( [gate] go to the user)
+codex/plan-implement: An open workspace is [gate] at the checkout
+codex/plan-implement: and write a [handoff] worklog entry at any [gate] - the plan workspace is the plan's home and [gate] , so leave it open, with a [gate] the next invocation can read, and say in the [handoff] which branch it is on, since tearing it down is plan-sync's gated step or the user's [decision] to [gate] the plan, never a stopping-point tidy-up
+codex/plan-implement: Anything you actually need before you can continue is not that kind of question
+codex/plan-implement: append the [gate] entry [gate] spawning the executor - naming [gate] at the run's first boundary, so the worklog records who orchestrated - with the filled executor template only (work item, plan doc paths, review file, worklog)
+codex/plan-implement: append the id entry as soon as the CLI reports the session id, and wait for the invocation to end [gate] - [gate] process exit with stdout captured to a temp log you name to the user
+codex/plan-implement: Ask for whatever is missing [gate] ing
+codex/plan-implement: ask it as one concise plain-text question and wait, never as options typed into a message, and never route a permission ask through the tool
+codex/plan-implement: Asking in codex
+codex/plan-implement: At the plan's first item there is [gate] , and this replaces the bare branch offer
+codex/plan-implement: bash herdr worktree create --cwd <primary checkout> \ --branch work/<slug> --base [gate] /<default branch> \ --label "<plan name>" --no-focus Resolve the default branch as that section does - the primary checkout's local [gate] /<default branch>, taking only the branch name from the remote HEAD, never the [gate] string git symbolic-ref prints, which is a different commit whenever a fetch is unmerged
+codex/plan-implement: establish the plan's home per PROTOCOL.md "The plan workspace" before spawning anything, and never open a [gate] for a plan that has one
+codex/plan-implement: Executor and reviewer are never the [gate]
+codex/plan-implement: Executor/reviewer profiles come from plan.md's Decisions table, overridable per run
+codex/plan-implement: hosted, it is the [gate] , and the [gate] , so no log path is reported
+codex/plan-implement: if the branch was renamed or the checkout moved, its [gate] is stale, so re-open by branch to rebind it rather than trusting it - passing the stale path as a seat's --cwd silently roots that seat outside the repo instead of erring
+codex/plan-implement: Implement the next pending work item of the plan named in the user's request
+codex/plan-implement: its collaboration-mode rules come first, and a skill does not override them
+codex/plan-implement: Name the workspace and checkout to the user, set the [gate] , and from here on run your own validation and diff inspection in that checkout
+codex/plan-implement: offer a [gate]
+codex/plan-implement: on implemented, run the item's validation line yourself, in the [gate] when the plan has a worktree workspace, recording command and outcome as a [validation] [gate] - red resumes the executor with executor-resume-validation pointing at that entry, [gate] on one item without green escalates to the user, and human
+codex/plan-implement: on that go you may commit, push the work branch and open the PR, which you then leave open [gate] - merging takes their [gate] on that PR, [gate] (PROTOCOL.md, "Seats")
+codex/plan-implement: One herdr worktree list --cwd <primary checkout> lookup matched on the work branch, then reuse, herdr worktree open, or herdr worktree create on a surviving branch, as that section's arms direct
+codex/plan-implement: Outside herdr none of this applies
+codex/plan-implement: plans without recorded profiles fall back to executor claude, reviewer codex, stated at spawn time
+codex/plan-implement: read plan.md, breakdown.md and the [gate] (a [handoff] entry is the [gate] - do what it says first)
+codex/plan-implement: refuse to implement [gate] , sending the user to plan-create's sign-off instead
+codex/plan-implement: take the workspace step above before spawning anything
+codex/plan-implement: the answers below are the user's, so a missing one is [gate]
+codex/plan-implement: The loop is defined in ~/.config/plan-skills/PROTOCOL.md - read that file, ~/.config/plan-skills/ROLES.md and ~/.config/plan-skills/ARTIFACTS.md now, then follow them exactly, especially "The executor seat"
+codex/plan-implement: the plan directory (and optionally which item)
+codex/plan-implement: the plan documents [gate] and are written there by absolute path, which for your codex seats is what the writable root re-admits
+codex/plan-implement: The workspace step, inside herdr
+codex/plan-implement: This skill writes files, so it runs in Default mode, where request_user_input is for optional questions whose answer would materially improve the work - one to three per call, prefer one, every question carrying concrete options with your recommendation marked - and an empty return means carry on with your best judgment rather than ask again
+codex/plan-implement: validation lines go to the user, [gate]
+codex/plan-implement: What no mode changes
+codex/plan-implement: when the [gate] , [gate] as the gate and [gate]
+codex/plan-implement: you [gate]
+codex/plan-implement: You are the orchestrator
+codex/plan-implement: You need from the arguments or the user
+codex/plan-item-review: [gate] claude, reviewer codex
+codex/plan-item-review: [gate] without closure on an item means escalate to the user
+codex/plan-item-review: ADDRESS is the executor's - resume the item's executor session from its latest [session] id entry whose seat is executor, never a [gate] from the same worklog, with the executor-address template, fresh spawn (full executor template) only if the [gate] , the [gate] entry appended [gate] and the id entry when the CLI reports it - after the seat's terminal entry for claude -p, which reports [gate]
+codex/plan-item-review: Advance the workspace [gate] at each round and pause so the panel shows where the loop is
+codex/plan-item-review: after ADDRESS and before any VERIFY round you apply the protocol's GATE step - classify the ADDRESS exit ( [gate] go to the user) and re-run the item's validation line [gate] , unconditionally, red following the validation gate, never a reviewer round, and run that validation where the work is
+codex/plan-item-review: and never open a [gate] for the review
+codex/plan-item-review: Anything you actually need before you can continue is not that kind of question
+codex/plan-item-review: Ask for whatever is missing [gate] ing
+codex/plan-item-review: ask it as one concise plain-text question and wait, never as options typed into a message, and never route a permission ask through the tool
+codex/plan-item-review: Asking in codex
+codex/plan-item-review: Commits are the user's call
+codex/plan-item-review: every seat is spawned with its [gate] , never [gate] , and the executor's [gate] its review-file response, where the user can audit it, rather than into anyone's prompt
+codex/plan-item-review: Executor/reviewer profiles come from plan.md's Decisions table when the item belongs to a plan, overridable per run
+codex/plan-item-review: hosted, the [gate] (herdr agent read, --source visible unless the seat is settled idle) and the live agent is its own continuity, so a later round is another prompt to the same name - and every seat including the reviewer gets the [gate] - boundary before each spawn or resume, id entry as soon as the CLI reports the id, which is the codex thread.started line or the claude session_id - and [gate] that reviewer's own id entry
+codex/plan-item-review: its collaboration-mode rules come first, and a skill does not override them
+codex/plan-item-review: locate the workspace by the work branch and reuse, open or recreate it as that section's arms direct, since a review invoked on its own may be the first thing to touch the plan this session
+codex/plan-item-review: never the [gate] as each other
+codex/plan-item-review: Non-negotiables, restated from the protocol
+codex/plan-item-review: Read that file, ~/.config/plan-skills/ROLES.md and ~/.config/plan-skills/ARTIFACTS.md now, then follow them exactly
+codex/plan-item-review: record it then rather than [gate] ing it (and name [gate] at the run's first boundary when this skill runs standalone), and [gate] without a plan worklog get one named with the user first, asked plainly
+codex/plan-item-review: Run the plan review loop for the work item named in the user's request
+codex/plan-item-review: split each seat's pane from the workspace's pane with the [gate] as cwd
+codex/plan-item-review: the [gate] when the plan has a worktree workspace
+codex/plan-item-review: the answers below are the user's, so a missing one is [gate]
+codex/plan-item-review: The review file and worklog [gate] in the primary checkout, which is what the codex writable root re-admits
+codex/plan-item-review: the work item, the plan doc paths, and the review file path (default <plan docs dir>/<work_item_slug>_review.md)
+codex/plan-item-review: This skill writes files, so it runs in Default mode, where request_user_input is for optional questions whose answer would materially improve the work - one to three per call, prefer one, every question carrying concrete options with your recommendation marked - and an empty return means carry on with your best judgment rather than ask again
+codex/plan-item-review: What no mode changes
+codex/plan-item-review: when [gate] , run the plan-conformance-pass skill as the [gate]
+codex/plan-item-review: When the item belongs to a plan with a worktree workspace, every seat of this loop - the reviewer, the executor it resumes, and the conformance seat - is hosted there, per PROTOCOL.md "The plan workspace"
+codex/plan-item-review: you [gate]
+codex/plan-item-review: You are the orchestrator of the review loop defined in ~/.config/plan-skills/PROTOCOL.md
+codex/plan-item-review: You need from the arguments or the user
+codex/plan-item-review: you never [gate] or edit [gate]
+codex/plan-item-review: you pause and report to the user [gate]
+codex/plan-item-review: you record how to reach each seat invocation again - [gate] goes to a temp log you name to the user
+codex/plan-sync: [decision] [gate] , and a [done] entry [gate] (a reviewed item gets a [gate] , and the sync finishes after the user commits)
+codex/plan-sync: [gate] ment is the user's [decision], never yours, and --force over a dirty checkout needs their explicit word
+codex/plan-sync: and append to worklog.md
+codex/plan-sync: Anything you actually need before you can continue is not that kind of question
+codex/plan-sync: ask it as one concise plain-text question and wait, never as options typed into a message, and never route a permission ask through the tool
+codex/plan-sync: Asking in codex
+codex/plan-sync: establish what landed from git log and diff since the last sync, the item's review file and the user's confirmation, asked plainly since you need it (the [gate] , not your session memory) - and for a plan with a worktree workspace the [gate] on the work branch is where you read the log and the diff
+codex/plan-sync: Finally [gate] per ARTIFACTS.md ("The review surface" - [gate] first), and report what changed
+codex/plan-sync: its collaboration-mode rules come first, and a skill does not override them
+codex/plan-sync: Read ~/.config/plan-skills/PROTOCOL.md and ~/.config/plan-skills/ARTIFACTS.md now, then follow them exactly
+codex/plan-sync: Reconcile the plan documents named in the user's request with what actually landed in the repository
+codex/plan-sync: set the [gate] to where the plan now stands (reviewed - awaiting commit, the next item, or done), then evaluate the [gate] of PROTOCOL.md "The plan workspace" - [gate] <commit> AND the work branch tip contained in the primary checkout's local default branch ( [gate] /<default branch>, resolved as that section directs, since testing the [gate] instead asks about fetched remote history rather than the user's merge)
+codex/plan-sync: Short of both, say so and [gate]
+codex/plan-sync: that is the [gate]
+codex/plan-sync: the answers below are the user's, so a missing one is [gate]
+codex/plan-sync: the branch survives
+codex/plan-sync: the plan directory (and optionally which work item just landed)
+codex/plan-sync: The user [gate]
+codex/plan-sync: Then the workspace step, for a plan with a worktree workspace
+codex/plan-sync: This skill writes files, so it runs in Default mode, where request_user_input is for optional questions whose answer would materially improve the work - one to three per call, prefer one, every question carrying concrete options with your recommendation marked - and an empty return means carry on with your best judgment rather than ask again
+codex/plan-sync: update breakdown.md (item status - [gate] the user's commit exists, done <commit> only once it does, and on a plan with a worktree workspace that commit is the work-branch commit that delivered the item, [gate] , since one item can land as more than one commit and the work branch carries other items' commits too - confirm it is on the branch with git merge-base --is-ancestor <commit> work/<slug> before writing it, because that is exactly what a successor's blocking edge will check, while the [gate] keeps the unchanged rule - plus deviations and the [gate] )
+codex/plan-sync: update plan.md's answered [gate] and stale current state - [gate] , while adding, dropping or [gate] after approval takes a [decision] - raising rather than editing anything that would [gate]
+codex/plan-sync: What no mode changes
+codex/plan-sync: When both hold, [gate] that the plan is finished, that every [gate] and its [gate] , and that the [gate] , then herdr worktree remove --workspace <workspace-id>
+codex/plan-sync: You are the orchestrator
+codex/plan-sync: You need from the arguments or the user

@@ -26,8 +26,11 @@ Steps:
    executor and implementation-reviewer profiles the plan's items will
    use (defaults: executor `claude`, reviewer `codex`; never the same
    LLM as each other) - they are recorded in the Decisions table, where
-   plan-implement and plan-item-review read them. Every decision lands
-   in plan.md's Decisions table and is final.
+   plan-implement and plan-item-review read them. Ask too which
+   surfaces the work touches that carry one copy per agent CLI, so each
+   item names every adapter it touches rather than the one path you
+   happen to be in (ARTIFACTS.md, breakdown drafting rules). Every
+   decision lands in plan.md's Decisions table and is final.
 2. **Draft** `plan.md` (status: draft) and `breakdown.md` per
    ARTIFACTS.md. Architecture level: what and why, not how.
 3. **Design review loop** per PROTOCOL.md ("The design review"):
