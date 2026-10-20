@@ -15,7 +15,11 @@ Arguments (ask for whatever is missing rather than guessing):
 - conformance file: default `<plan docs dir>/<scope_slug>_conformance.md`.
 
 Run it as one reviewer invocation, fresh session, with the `conformance`
-template filled and nothing else in the prompt. Capture stdout to a temp
-log. When it finishes, report the findings to the human with the file
-path. If findings need acting on, that is a new `plan-item-review` round, not
-something to quietly fix: the human decides.
+template filled and nothing else in the prompt. Headless, capture
+stdout to a temp log; when the item belongs to a plan with a worktree
+workspace, the seat is hosted there like every other seat of the loop
+(PROTOCOL.md, "The plan workspace") and the pane transcript is the
+record instead. When it finishes, report the findings to the human with
+the file path. If findings need acting on, that is a new
+`plan-item-review` round, not something to quietly fix: the human
+decides.

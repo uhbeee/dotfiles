@@ -62,6 +62,13 @@ Drafting rules:
   one session and one PR. When a slice must split, the pieces compose
   through blocking edges and the group gets a verifiable end point.
   Do not force a slice where one is not feasible.
+- An item that touches a surface carrying one copy per agent CLI names
+  every adapter it touches, never the single path the drafting session
+  happens to sit in: the `plan-*` adapters under `~/.claude/skills/`
+  and `~/.codex/skills/` are the standing case, and PROTOCOL.md's
+  adapters-stay-thin invariant makes a one-sided change a defect. The
+  interview asks which copies the work touches before the item is
+  written.
 - Prefactoring lands first, as its own item.
 - Wide mechanical refactors (one change, whole-codebase blast radius)
   are the exception: sequence them expand-contract. Expand adds the new

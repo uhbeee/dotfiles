@@ -43,15 +43,19 @@ choice; the interview also asks which executor and
 implementation-reviewer profiles the plan's items will use (defaults:
 executor `claude`, reviewer `codex`; never the same LLM as each other),
 recorded in the Decisions table where plan-implement and
-plan-item-review read them; every decision lands in plan.md's Decisions
-table and is final.
+plan-item-review read them; it also asks which surfaces the work
+touches that carry one copy per agent CLI, so each item names every
+adapter it touches rather than the one path you happen to be in
+(ARTIFACTS.md, breakdown drafting rules); every decision lands in
+plan.md's Decisions table and is final.
 Then draft plan.md and breakdown.md per
 ARTIFACTS.md at architecture level; run the design review loop per
-PROTOCOL.md ("The design review") with the design-review templates and
-review file plan_review.md, pausing for the user after every reviewer
-round; then publish plan.md (and breakdown.md if useful) with
-`plan-publish` for the user's own review, poll their annotations with
-`plan-feedback`, and fold every annotation back into the files per
+PROTOCOL.md ("The design review") with the `design-review` and
+`design-review-verify` templates and review file plan_review.md,
+pausing for the user after every reviewer round; then publish plan.md
+(and breakdown.md if useful) with `plan-publish` for the user's own
+review, poll their annotations with `plan-feedback`, and fold every
+annotation back into the files per
 ARTIFACTS.md ("The review surface": an edit or a recorded
 disagreement, disposition reported); on their explicit sign-off flip
 plan.md's status to approved, create worklog.md with the [decision]

@@ -71,8 +71,9 @@ record (`herdr agent read`, `--source visible` unless the seat is
 settled idle) and the live agent is its own continuity, so a later
 round is another prompt to the same name - and every seat including
 the reviewer gets the full [session] pair - boundary before each spawn
-or resume, id entry as soon as the id is known - and verify rounds
-resume that reviewer's own id entry; three verify rounds without
+or resume, id entry as soon as the CLI reports the id, which is the
+codex `thread.started` line or the claude `session_id` - and verify
+rounds resume that reviewer's own id entry; three verify rounds without
 closure on an item means escalate to the user; when all items close,
 run the plan-conformance-pass skill as the terminal gate. Commits are
 the user's call.

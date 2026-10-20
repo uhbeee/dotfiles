@@ -25,10 +25,11 @@ assumed.
 You need from the arguments or the user: the plan directory (and
 optionally which work item just landed). Ask rather than guess.
 
-The steps: establish what landed from git history, the item's review
-file and the user's confirmation, asked plainly since you need it (the
-repo is the record, not your session memory) - and for a plan with a
-worktree workspace the plan checkout on the work branch is where you
+The steps: establish what landed from git log and diff since the last
+sync, the item's review file and the user's confirmation, asked
+plainly since you need it (the repo is the record, not your session
+memory) - and for a plan with a worktree workspace the plan checkout
+on the work branch is where you
 read the log and the diff; update breakdown.md (item status -
 `reviewed` until the user's commit exists, `done <commit>` only once it
 does, and on a plan with a worktree workspace that commit is the
@@ -42,9 +43,10 @@ deviations and the status header line); update plan.md's answered Open
 questions and stale current state - recording an answer is your work,
 while adding, dropping or rewording the questions after approval takes
 a [decision] - raising rather than editing anything that would
-contradict a Decision; and append [decision] entries for deviations,
-and a [done] entry only when the commit exists (a reviewed item gets a
-[handoff] instead, and the sync finishes after the user commits).
+contradict a Decision; and append to worklog.md: [decision] entries
+for deviations, and a [done] entry only when the commit exists (a
+reviewed item gets a [handoff] instead, and the sync finishes after
+the user commits).
 
 Then the workspace step, for a plan with a worktree workspace: set the
 status token to where the plan now stands (`reviewed - awaiting
