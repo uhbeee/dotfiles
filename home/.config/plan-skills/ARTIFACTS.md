@@ -22,7 +22,10 @@ owner's call. Contents:
 ## plan.md
 
 Opens with a status line:
-`> **Status:** draft | in design review | approved YYYY-MM-DD`.
+`> **Status:** draft | in design review | approved YYYY-MM-DD`,
+followed - from sign-off on - by
+`> **Review surface:** lavish | chat`, the field plan-sync's republish
+reads ("The review surface", below).
 
 Required sections:
 
@@ -208,6 +211,33 @@ pause point, in chat, that they are done annotating the current
 revision, then run one final drain poll - so a late annotation never
 attaches to the wrong revision. A session the reviewer ended from the
 browser is never reopened uninvited.
+
+Not every plan is reviewed there, and a plan whose human reviews in
+chat gets nothing from a browser render on every checkpoint - the
+herdr-seat-visibility plan measured the cost at 15 poll records and
+zero annotations. So plan.md's header names the surface in use, as a
+`> **Review surface:** lavish | chat` line beside `Status:`, and
+plan-sync's republish reads that field: `lavish` publishes, `chat`
+skips the publish. The gate is a field the orchestrator reads, never a
+judgment it infers from how quiet the surface has been - no feedback
+is not no reviewer.
+
+An absent or unrecognized value publishes. The field is an opt-out, so
+a plan written before it existed keeps its surface and no human loses
+one by omission; an unrecognized value is a typo, and the safe reading
+of a typo is to publish and name the value that was unreadable. A
+skipped publish is reported at the pause with the field value that
+caused it - a skip is said out loud, never silence.
+
+What the field does not gate: the drain poll, which runs on every sync
+either way, because a poll is cheap, a timeout is never approval, and
+a late annotation still has to land. On a `chat` plan that poll
+normally reports the session unavailable (11); that is its expected
+reading there, not a fault. Nor does it gate plan-create, whose own
+checkpoints publish either way - plan-create is what writes the field,
+at sign-off, beside the status flip, naming the surface the human
+actually reviewed on, confirmed with them because it governs every
+later sync.
 
 Reviews happen on machines with a local browser. The floor, when no
 browser is at hand, is reviewing the markdown file directly; the rest

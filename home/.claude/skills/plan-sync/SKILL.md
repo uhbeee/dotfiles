@@ -55,6 +55,14 @@ Steps:
    `herdr worktree remove --workspace <workspace-id>`; the branch
    survives. Abandonment is the human's `[decision]`, never yours, and
    `--force` over a dirty checkout needs their explicit word.
-6. **Republish** the plan with `plan-publish` per ARTIFACTS.md ("The
-   review surface" - drain pending feedback first), and report what
-   changed. The human owns the commit of the doc updates.
+6. **Republish, if the plan's surface is in use**: drain pending
+   feedback first, per ARTIFACTS.md ("The review surface"), and that
+   poll runs on every sync whatever the surface - on a chat-reviewed
+   plan it normally reports the session unavailable, which is its
+   expected reading there. Then read plan.md's `Review surface:`
+   header field: on `lavish`, republish the plan with `plan-publish`
+   exactly as before; on `chat`, skip the publish; an absent or
+   unrecognized value publishes, because the field is an opt-out and
+   no plan silently loses a surface its human wants. Say at the pause
+   when you skipped the publish and which field value caused it, and
+   report what changed. The human owns the commit of the doc updates.
