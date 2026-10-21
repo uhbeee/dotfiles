@@ -351,6 +351,17 @@ archive-one-index-line|one index line
 one-reviewer-invocation|one reviewer invocation
 refusal-goes-to-human|refusal goes to the
 interview-covers-scope|scope in and out
+republish-conditional|if the plan'?s surface is in use
+publish-gate-reads-field|read plan.md'?s Review surface
+publish-unchanged-on-lavish|on lavish, republish
+publish-skipped-on-chat|on chat, skip the publish
+absent-field-publishes|absent or unrecognized value publishes
+skip-reported-at-pause|say at the pause when you skipped the publish
+poll-runs-every-sync|poll runs on every sync
+chat-plan-poll-unavailable|reports the session unavailable
+signoff-writes-review-surface|write the Review surface
+review-surface-confirmed-not-assumed|confirmed with them rather than assumed
+plan-create-publishes-regardless|checkpoints publish whatever the field says
 EOF
 }
 
@@ -522,6 +533,11 @@ blocking-edges|blocking-edge-needs-commit-on-branch
 default-branch-resolution|never-origin-ref
 teardown-gate|teardown-needs-pane-closed
 archive-single-index|archive-one-index-line
+republish-with-plan-publish|publish-gate-reads-field
+publish-skipped-on-chat|skip-reported-at-pause
+publish-skipped-on-chat|absent-field-publishes
+signoff-writes-review-surface|signoff-needs-explicit-approval
+signoff-writes-review-surface|review-surface-confirmed-not-assumed
 EOF
 }
 

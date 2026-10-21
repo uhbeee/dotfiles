@@ -58,7 +58,11 @@ review, poll their annotations with `plan-feedback`, and fold every
 annotation back into the files per
 ARTIFACTS.md ("The review surface": an edit or a recorded
 disagreement, disposition reported); on their explicit sign-off flip
-plan.md's status to approved, create worklog.md with the [decision]
-entry, and republish with `plan-publish` (drain pending feedback
-first, per ARTIFACTS.md). Never commit, push, or publish on your own
+plan.md's status to approved, write the `Review surface:` header field
+beside it - the surface the user actually reviewed on, confirmed with
+them rather than assumed, because it is what every later plan-sync's
+republish reads (ARTIFACTS.md, "The review surface") - create
+worklog.md with the [decision] entry, and republish with
+`plan-publish` (drain pending feedback first, per ARTIFACTS.md; this
+skill's own checkpoints publish whatever the field says). Never commit, push, or publish on your own
 initiative beyond the review surface above; the user owns those.

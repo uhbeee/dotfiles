@@ -44,7 +44,7 @@ claude/plan-create: - plan name
 claude/plan-create: "Whatever you think is best" gets your recommendation and their [gate]
 claude/plan-create: [gate] , or publish on your own initiative beyond the review surface above
 claude/plan-create: [gate] back into the files per ARTIFACTS.md ("The review surface")
-claude/plan-create: [gate] YYYY-MM-DD, [gate] the [decision] sign-off entry, republish with plan-publish ( [gate] first, per ARTIFACTS.md)
+claude/plan-create: [gate] YYYY-MM-DD, [gate]
 claude/plan-create: Also ask which executor and implementation-reviewer profiles the plan's items will use (defaults
 claude/plan-create: an edit or a recorded disagreement, [gate]
 claude/plan-create: Arguments (ask for whatever is missing [gate] ing)
@@ -56,6 +56,7 @@ claude/plan-create: Draft plan.md (status
 claude/plan-create: draft) and breakdown.md per ARTIFACTS.md
 claude/plan-create: Every decision lands in plan.md's Decisions [gate]
 claude/plan-create: executor claude, reviewer codex
+claude/plan-create: header field beside it - the surface the human actually reviewed on, [gate] , because it is what every later plan-sync's republish reads (ARTIFACTS.md, "The review surface") - [gate] the [decision] sign-off entry, and republish with plan-publish ( [gate] first, per ARTIFACTS.md
 claude/plan-create: in design review
 claude/plan-create: intent, pointers to existing context (the human often knows exactly where prior art lives - ask first, search later), [gate] , constraints, dependencies, risks, deadlines, success criteria
 claude/plan-create: must be a different LLM from you (you edit the plan in that loop)
@@ -66,6 +67,7 @@ claude/plan-create: Point the human at plan-implement for the first item
 claude/plan-create: Read ~/.config/plan-skills/PROTOCOL.md, ROLES.md and ARTIFACTS.md now, then follow them exactly
 claude/plan-create: Resolve every ambiguity with AskUserQuestion before drafting anything
 claude/plan-create: the human owns all of that
+claude/plan-create: this skill's own [gate] )
 claude/plan-create: Up to 4 questions per round, [gate]
 claude/plan-create: what and why, not how
 claude/plan-create: When the loop closes, publish plan.md (and breakdown.md if useful) with plan-publish so it opens in the human's browser, and [gate] with plan-feedback
@@ -168,9 +170,11 @@ claude/plan-item-review: write it then, and never [gate] e one to look earlier
 claude/plan-item-review: you [gate]
 claude/plan-item-review: You are the orchestrator of the review loop defined in ~/.config/plan-skills/PROTOCOL.md
 claude/plan-sync: - plan directory (and optionally which work item just landed)
+claude/plan-sync: [gate] and which field value caused it, and report what changed
+claude/plan-sync: [gate] first, per ARTIFACTS.md ("The review surface"), and that [gate] whatever the surface - on a chat-reviewed plan it normally [gate] , which is its expected reading there
 claude/plan-sync: [gate] ment is the human's [decision], never yours, and --force over a dirty checkout needs their explicit word
-claude/plan-sync: [gate] per ARTIFACTS.md ("The review surface" - [gate] first), and report what changed
 claude/plan-sync: adding, dropping or [gate] themselves after approval changes the approved plan and takes a [decision]
+claude/plan-sync: an [gate] , because the field is an opt-out and no plan silently loses a surface its human wants
 claude/plan-sync: Anything that would [gate] is the human's call to change, not yours - raise it instead of editing
 claude/plan-sync: append [decision] [gate] not yet recorded
 claude/plan-sync: Arguments (ask for whatever is missing [gate] ing)
@@ -184,7 +188,9 @@ claude/plan-sync: In the [gate] the rule is unchanged
 claude/plan-sync: never mark done without one
 claude/plan-sync: Note on the item where the implementation deviated from the drafted scope, and update the [gate]
 claude/plan-sync: On a plan with a worktree workspace that commit is the work-branch commit that delivered the item, [gate] (one item can land as more than one commit, and the work branch carries other items' commits too)
+claude/plan-sync: on lavish, [gate] exactly as before
 claude/plan-sync: Read ~/.config/plan-skills/PROTOCOL.md and ~/.config/plan-skills/ARTIFACTS.md now, then follow them exactly
+claude/plan-sync: Republish, [gate]
 claude/plan-sync: set the [gate] to where the plan now stands (reviewed - awaiting commit, the next item, or done), then evaluate the [gate] of PROTOCOL.md "The plan workspace" - [gate] <commit> AND the work branch tip contained in the primary checkout's local default branch ( [gate] /<default branch>, resolved as that section directs
 claude/plan-sync: set the item's status - [gate] the human has not committed yet, done <commit> once the commit exists
 claude/plan-sync: Short of both, say so and [gate]
@@ -194,6 +200,7 @@ claude/plan-sync: The [done] entry means landed - append it [gate] , with the co
 claude/plan-sync: the [gate]
 claude/plan-sync: the branch survives
 claude/plan-sync: The human [gate]
+claude/plan-sync: Then [gate]
 claude/plan-sync: update [gate] that got answered and any current state the plan asserts that is no longer true
 claude/plan-sync: When both hold, [gate] that the plan is finished, that every [gate] and its [gate] , and that the [gate] , then herdr worktree remove --workspace <workspace-id>
 claude/plan-sync: Workspace, for a plan with a worktree workspace
@@ -254,11 +261,12 @@ codex/plan-create: Each picker call carries one to three questions (prefer one, 
 codex/plan-create: Either way ambiguity is the user's to resolve
 codex/plan-create: every decision lands in plan.md's Decisions [gate]
 codex/plan-create: executor claude, reviewer codex
+codex/plan-create: header field beside it - the surface the user actually reviewed on, [gate] , because it is what every later plan-sync's republish reads (ARTIFACTS.md, "The review surface") - [gate] the [decision] entry, and republish with plan-publish ( [gate] first, per ARTIFACTS.md
 codex/plan-create: If the user stays in Default mode, its rules apply instead
 codex/plan-create: interview the user until every ambiguity is resolved (intent, existing context pointers, [gate] , constraints, dependencies, risks, deadlines, success criteria) - at most 3 questions per ask, [gate] , and "whatever you think is best" gets your recommendation plus the user's [gate] , never a silent choice
 codex/plan-create: it also asks which surfaces the work touches that carry one copy per agent CLI, so each item names [gate] rather than the one path you happen to be in (ARTIFACTS.md, breakdown drafting rules)
 codex/plan-create: never the [gate] as each other), recorded in the Decisions table where plan-implement and plan-item-review read them
-codex/plan-create: on their [gate] , [gate] the [decision] entry, and republish with plan-publish ( [gate] first, per ARTIFACTS.md)
+codex/plan-create: on their [gate] , [gate]
 codex/plan-create: Read that file, ~/.config/plan-skills/ROLES.md and ~/.config/plan-skills/ARTIFACTS.md now, then follow them exactly
 codex/plan-create: run the design review loop per PROTOCOL.md ("The design review") with the design-review and design-review-verify templates and review file plan_review.md, pausing for the user [gate]
 codex/plan-create: Say which mode you need and wait
@@ -270,6 +278,7 @@ codex/plan-create: the user owns those
 codex/plan-create: Then draft plan.md and breakdown.md per ARTIFACTS.md at [gate]
 codex/plan-create: then publish plan.md (and breakdown.md if useful) with plan-publish for the user's own review, [gate] with plan-feedback, and [gate] back into the files per ARTIFACTS.md ("The review surface"
 codex/plan-create: this skill spans two of its collaboration modes, and only the user switches between them (Shift+Tab) - you cannot, and must not claim to
+codex/plan-create: this skill's own [gate] )
 codex/plan-create: You are the orchestrator, and the executor of the design review loop, defined in ~/.config/plan-skills/PROTOCOL.md
 codex/plan-create: You need from the arguments or the user
 codex/plan-implement: [gate] - required input, so a plain question - where a blocking edge on a plan with a worktree workspace is satisfied only once the blocker's done <commit> exists and that [gate] (git merge-base --is-ancestor <commit> work/<slug>), so a reviewed blocker with no commit [gate] and the [gate] user, who owns the commit, while the [gate] keeps the unchanged rule of blocking edges done
@@ -351,14 +360,18 @@ codex/plan-item-review: you never [gate] or edit [gate]
 codex/plan-item-review: you pause and report to the user [gate]
 codex/plan-item-review: you record how to reach each seat invocation again - [gate] goes to a temp log you name to the user
 codex/plan-sync: [decision] [gate] , and a [done] entry [gate] (a reviewed item gets a [gate] , and the sync finishes after the user commits)
+codex/plan-sync: [gate] and which field value caused it, and report what changed
+codex/plan-sync: [gate] first, per ARTIFACTS.md ("The review surface"), and that [gate] whatever the surface - on a chat-reviewed plan it normally [gate] , which is its expected reading there
 codex/plan-sync: [gate] ment is the user's [decision], never yours, and --force over a dirty checkout needs their explicit word
+codex/plan-sync: an [gate] , because the field is an opt-out and no plan silently loses a surface its user wants
 codex/plan-sync: and append to worklog.md
 codex/plan-sync: Anything you actually need before you can continue is not that kind of question
 codex/plan-sync: ask it as one concise plain-text question and wait, never as options typed into a message, and never route a permission ask through the tool
 codex/plan-sync: Asking in codex
 codex/plan-sync: establish what landed from git log and diff since the last sync, the item's review file and the user's confirmation, asked plainly since you need it (the [gate] , not your session memory) - and for a plan with a worktree workspace the [gate] on the work branch is where you read the log and the diff
-codex/plan-sync: Finally [gate] per ARTIFACTS.md ("The review surface" - [gate] first), and report what changed
+codex/plan-sync: Finally the republish, which happens only [gate]
 codex/plan-sync: its collaboration-mode rules come first, and a skill does not override them
+codex/plan-sync: on lavish, [gate] exactly as before
 codex/plan-sync: Read ~/.config/plan-skills/PROTOCOL.md and ~/.config/plan-skills/ARTIFACTS.md now, then follow them exactly
 codex/plan-sync: Reconcile the plan documents named in the user's request with what actually landed in the repository
 codex/plan-sync: set the [gate] to where the plan now stands (reviewed - awaiting commit, the next item, or done), then evaluate the [gate] of PROTOCOL.md "The plan workspace" - [gate] <commit> AND the work branch tip contained in the primary checkout's local default branch ( [gate] /<default branch>, resolved as that section directs, since testing the [gate] instead asks about fetched remote history rather than the user's merge)
@@ -368,6 +381,7 @@ codex/plan-sync: the answers below are the user's, so a missing one is [gate]
 codex/plan-sync: the branch survives
 codex/plan-sync: the plan directory (and optionally which work item just landed)
 codex/plan-sync: The user [gate]
+codex/plan-sync: Then [gate]
 codex/plan-sync: Then the workspace step, for a plan with a worktree workspace
 codex/plan-sync: This skill writes files, so it runs in Default mode, where request_user_input is for optional questions whose answer would materially improve the work - one to three per call, prefer one, every question carrying concrete options with your recommendation marked - and an empty return means carry on with your best judgment rather than ask again
 codex/plan-sync: update breakdown.md (item status - [gate] the user's commit exists, done <commit> only once it does, and on a plan with a worktree workspace that commit is the work-branch commit that delivered the item, [gate] , since one item can land as more than one commit and the work branch carries other items' commits too - confirm it is on the branch with git merge-base --is-ancestor <commit> work/<slug> before writing it, because that is exactly what a successor's blocking edge will check, while the [gate] keeps the unchanged rule - plus deviations and the [gate] )

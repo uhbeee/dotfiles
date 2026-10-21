@@ -45,10 +45,15 @@ Steps:
    review surface"): an edit or a recorded disagreement, disposition
    reported.
 5. **Sign-off.** On the human's explicit approval: flip plan.md status
-   to `approved YYYY-MM-DD`, create worklog.md with the `[decision]`
-   sign-off entry, republish with `plan-publish` (drain pending
-   feedback first, per ARTIFACTS.md). Point the human at
-   `plan-implement` for the first item.
+   to `approved YYYY-MM-DD`, write the `Review surface:` header field
+   beside it - the surface the human actually reviewed on, confirmed
+   with them rather than assumed, because it is what every later
+   plan-sync's republish reads (ARTIFACTS.md, "The review surface") -
+   create worklog.md with the `[decision]` sign-off entry, and
+   republish with `plan-publish` (drain pending feedback first, per
+   ARTIFACTS.md; this skill's own checkpoints publish whatever the
+   field says). Point the human at `plan-implement` for the first
+   item.
 
 Never commit, push, or publish on your own initiative beyond the
 review surface above; the human owns all of that.
