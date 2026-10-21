@@ -16,6 +16,12 @@ with pkgs; [
   lazygit
   neovim
   pi-coding-agent  # from the unstable overlay in flake.nix
+  # Language toolchains. Build tools are deliberately not here: ./gradlew and
+  # a project flake pin their own version next to the code that needs it, and
+  # a second one on PATH only shadows it. A JDK is all either needs.
+  # To drop it on a machine, excludePackages takes the pname, which differs by
+  # platform: "zulu-ca-jdk" on darwin, "openjdk" on linux.
+  jdk21     # Java 21 LTS
   # The font everything renders in
   nerd-fonts.hack
 ]
