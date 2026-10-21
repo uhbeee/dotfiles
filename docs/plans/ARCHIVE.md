@@ -8,3 +8,5 @@
 - windows-debloat - archived 2026-09-19 to ~/workspace/github/ZK/plans/dotfiles/windows-debloat/ - final commits dotfiles e900174, machines 2d8eaca
 - bump-lavish-axi: archived 2026-09-23 to ZK/plans/dotfiles/bump-lavish-axi/ - final commit 7365c56
 - lavish-review-surface - archived 2026-09-29 to ~/workspace/github/ZK/plans/dotfiles/lavish-review-surface/ - final commit 180d78e
+- herdr-seat-visibility - archived 2026-10-21 to ~/workspace/github/ZK/plans/dotfiles/herdr-seat-visibility/ - final commit 508c526
+- plan-sync-publish-gate - archived 2026-10-21 to ~/workspace/github/ZK/plans/dotfiles/plan-sync-publish-gate/ - final commit a327b60
