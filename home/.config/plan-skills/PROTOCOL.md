@@ -506,8 +506,7 @@ while it awaits the human:
 
 ```bash
 herdr pane report-metadata <pane-id> --source plan-skills \
-  --state-label idle="blocked: <summary>" \
-  --state-label done="blocked: <summary>" \
+  --display-agent "<seat name> [BLOCKED]" \
   --token blocked="<summary>"
 ```
 
@@ -515,8 +514,20 @@ and clears the mark on the steering resume:
 
 ```bash
 herdr pane report-metadata <pane-id> --source plan-skills \
-  --clear-state-labels --clear-token blocked
+  --clear-display-agent --clear-token blocked
 ```
+
+`--display-agent` is the half the human sees: on 0.9.0 the agents
+panel renders the agent name, so overriding the name reaches the eye,
+while `--token` and `--state-label` are stored and API-readable and
+render nowhere (both were set on a real blocked seat and the panel
+showed nothing - see Status). The token stays for machine readers;
+the display agent is what makes a parked blocker visible, which is
+what Decision 10 asks for. Metadata is stored per source, and the
+panel shows whichever source wrote last, falling back to another
+source's stored value when one is cleared - so this mark and the
+subagent hook's own display summary share a pane without either
+having to know about the other.
 
 **Toasts.** When a seat invocation settles after running longer than
 the threshold (default 60s), or settles blocked at any duration, the
@@ -524,28 +535,59 @@ orchestrator - the only party that knows a seat settled - raises:
 
 ```bash
 herdr notification show "<seat name>: <settled state>" \
-  --body "<item>: <one-line outcome>" --sound done
+  --body "<item>: <one-line outcome>" --sound done \
+  --position top-right
 ```
 
-(`--sound request` when it settled blocked).
+(`--sound request` when it settled blocked). `--position` is not
+optional in practice: a toast is an overlay drawn in a corner of the
+herdr TUI, not a macOS notification, and without the flag it lands in
+whatever corner the build defaults to, where the human may not be
+looking. Three accepted toasts reached nobody this way (Status).
+`show` returning `shown: true` means the call was accepted, not that
+anyone saw it.
 
 **Session record.** The `[session]` boundary entry is unchanged. The
 id entry records the herdr identities in place of a CLI-reported id:
 agent name, workspace id, pane id, worktree path, and branch. Whether
 a seat also gets its native session id depends on that agent's herdr
-integration (`herdr integration status`): an installed integration
-reports the id through `agent_session`, read live from `herdr agent
-get <name>` (`.agent_session.value`) - no wait-for-exit. The claude
-and codex integrations are both session-identity-only; seat state
-stays screen-detected regardless. On the verified setup claude's is
-installed (v9), so claude seats record the id; codex's is not, so no
-codex thread id is surfaced there and none is recorded - a fact
-about that machine's integrations, not about herdr. Installing it
-(`herdr integration install codex`; it writes under `~/.codex`, so
-it is the human's call) would surface the codex thread id the same
-way and let herdr's own session restore resume the pane
-(`codex resume <id>`). Either way the id is identity for the record:
-recovery stays fresh-spawn per the Resume rule, and scraping
+integration, and on when the integration has anything to report.
+Read it live from `herdr agent get <name>`
+(`.agent_session.value`) - no wait-for-exit - and read it again
+later rather than once, because absent at spawn does not mean
+absent. The claude and codex integrations are both
+session-identity-only; seat state stays screen-detected regardless.
+
+Three preconditions, each measured on 2026-10-21 and none implied by
+the one before it:
+
+1. The integration installed: `herdr integration status` reports it
+   `current` (claude v9, codex v8 here). `herdr integration install
+   codex` writes under `~/.codex`, so installing is the human's call.
+   It does not retrofit sessions already running.
+2. The agent trusting the hook. codex 0.163.0 parks a newly
+   registered SessionStart hook behind its own trust review ("1 hook
+   needs review before it can run", Installed 1 / Active 0), so the
+   hook does not run and the id never arrives, however current the
+   status reads. Trusting it is a human act in codex's own UI, and
+   because the hook fires at session start, a seat whose session
+   began before the trust never reports either.
+3. The seat having taken a turn. A trusted, freshly spawned codex
+   seat still reported `agent_session=None` at start and across four
+   polls; one prompt later the same seat reported its thread id. A
+   thread does not exist until there is a conversation to have an id
+   for.
+
+So for a hosted codex seat the id entry lands after the seat's first
+prompt, not at `agent start` - an orchestrator that reads `agent get`
+only at spawn time sees `None` and will record "no thread id
+surfaced" wrongly. claude's hook reports at session start, so a
+claude seat's id is there to read as soon as the seat is up. Once an
+id exists, herdr's own session restore can resume that pane
+(`codex resume <id>`). When it is genuinely absent, record none and
+move on, and say which precondition was missing rather than calling
+it a fact about herdr. Either way the id is identity for the
+record: recovery stays fresh-spawn per the Resume rule, and scraping
 `~/.codex/sessions` stays out.
 
 **Resume.** While the seat's pane is alive, every resume - ADDRESS,
@@ -699,9 +741,12 @@ herdr workspace report-metadata <workspace-id> --source plan-skills \
 
 with phase naming the gate the plan is at: `executor running`,
 `validation`, `review round <N>`, `awaiting human`, `conformance`,
-`reviewed - awaiting commit`, `done`. Whether a given herdr build's
-panels render workspace tokens or only labels is worth confirming
-visually once; the label carries the plan name either way.
+`reviewed - awaiting commit`, `done`. On 0.9.0 the panels render
+names and labels, not metadata: these tokens are stored and
+API-readable and no panel shows them (confirmed visually
+2026-10-21, workspace tokens and pane tokens alike), so the
+workspace label carries what the human must see and the tokens are
+for machine readers; worth confirming again on a newer build.
 
 **Teardown** is one command, and it is earned:
 
@@ -835,19 +880,124 @@ more than it is worth:
   implementation phase, so the publish-at-each-pause lifecycle was not
   exercised by it either.
 
+Herdr-hosted seats are exercised now too: the same claude-executes /
+codex-reviews pairing, run inside herdr 0.9.0 on a real work item (the
+plan-sync-publish-gate micro-plan's item 1, 2026-10-21, as the
+herdr-seat-visibility plan's item 4), with the orchestrator a claude
+session in the primary workspace and every seat a live herdr agent in
+the plan's own worktree workspace. Entry points were verified current
+before it began, since the exercise is meaningless against stale ones.
+
+Witnessed across that run, each sampled rather than inferred:
+
+- The worktree workspace as the plan's home: created at its first
+  item, carrying every item and invocation since, and grouped under
+  the repo (herdr reports it a linked worktree keyed to the primary
+  checkout's `.git`). It survived both kinds of loss - a five-day
+  pause with its seats still alive, and an accidental `workspace
+  close`, after which the lookup read `<UNOPENED>` and `worktree open
+  --branch` reopened the same checkout. One branch has had three
+  workspace ids across the plan, which is why the lifecycle keys on
+  the branch and never the id.
+- Hosted seats end to end: claude executors at `bypassPermissions`,
+  codex reviewer and conformance seats at `workspace-write` with the
+  plan-dir writable root, prompt via file, settled-state waits, exit
+  classification from the worklog entries, and `agent_session` read
+  live for the claude session id (codex seats recorded none, which was
+  accurate when observed and not the whole rule - see "Session record"
+  and the integration edge below).
+- Live input waits of both origins, Decision 10's path in full: one
+  provoked (a reviewer seat started read-only so it would have to ask)
+  and one natural (a conformance seat hitting the nix cache-lock edge
+  below). Each time `agent get` reported `blocked`, `agent read
+  --source visible` rendered the dialog, the orchestrator surfaced it
+  without answering, the human's answer was written as a worklog
+  `[decision]` before the seat was continued, the keys were relayed,
+  and the seat returned to working.
+- A `[blocker]` exit on the hosted path, the under-context path again:
+  the executor walled on a design choice the documents withheld and
+  changed nothing, the human named the mechanism in a `[decision]`,
+  and a steering resume of the same live agent implemented it.
+- In-process subagent lifecycle from the orchestrator's own hook, which
+  had never fired on that machine before the exercise (its state root
+  did not exist), sampled on its pane through `herdr api snapshot`
+  while a seat worked beside it: a single child's token appearing and
+  clearing with its state file; a long child holding its token unbroken
+  through a ~95s event-silent tool call, across samples 12s apart; and
+  two children live at once, two distinct tokens in every 2s sample for
+  32s, one changing tool while the other held, then both clearing. A
+  child's label is its agent type for its whole life unless it reaches
+  its parent's Stop, where the task description arrives. What that
+  establishes is the lifecycle, read through the API - not visibility:
+  those were tokens, and tokens render nowhere on this build (below).
+  The hook now also summarises its live roster into one
+  `--display-agent` override, which is the half a human can see.
+- The headless fallback, run rather than assumed: with `HERDR_ENV` and
+  the caller context vars unset the selection check chose the headless
+  recipes, and `claude -p ... --output-format json` returned its
+  session id with `is_error: false`.
+- Both of Decision 10 and 11's human-facing signals, each confirmed by
+  the human looking at them and each correcting the recipe written for
+  it. The seat-completion toast fired on a blocked settle, invisible
+  three times until the orchestrator learned a toast is a TUI corner
+  overlay taking `--position`, then seen. The `[blocker]`-exit pane
+  mark was set as specified, with `--state-label` and `--token` both
+  stored and API-readable, and the agents panel showed nothing;
+  `--display-agent` on the same pane changed the entry and was seen.
+  Both recipes above now carry the corrections.
+- The panels, which "Status tokens" above asked be confirmed once: on
+  0.9.0 they render names and labels, not metadata. Workspace tokens
+  were stored and API-readable at the same moment they were absent
+  from both panels, pane tokens and state labels likewise; the
+  workspace label and the agent name are what reach the human, and a
+  sidebar narrow enough truncates even the label. Keep what the human
+  must see in a name or a label.
+
+What that run does not establish:
+
+- The orchestrator was claude. Both plan-implement adapters carry the
+  workspace lifecycle and the parity test keeps them symmetric, but a
+  codex orchestrator hosting seats in herdr stays unexercised.
+- Teardown of a real plan's workspace at plan completion. The full
+  cycle has been exercised only on a throwaway; no real plan has
+  earned it yet.
+- Subagent presence as something the human saw. The lifecycle above was
+  sampled through the API, and the `--display-agent` summary that
+  replaces it was driven against live herdr with synthetic hook events
+  (roster of one, overlap of two, label upgrade at the parent's Stop,
+  per-child clearing, the compaction guard, and coexistence with the
+  blocked mark) rather than by a run with real children in a panel the
+  human was watching. Nor is the hook in that tree the installed one:
+  what makes an edit live depends on how the machine links authored
+  files. On the verified setup they are linked out of store - the
+  installed hook's link chain resolves into the primary checkout - so
+  merging the work and pulling there is what makes the new version
+  live, with no rebuild; a rebuild is needed only when a *new* link
+  appears. On a machine without that option the installed copy is a
+  store path and a rebuild is the only route. Either way, until a live
+  hook reports real children and the human confirms the panel, API
+  token presence is not the criterion met - which is why the contract
+  is pinned by `tests/subagent-hook.test.sh` rather than by one
+  hand-driven run.
+
 Not yet witnessed: an abnormal exit (the classification path is
 untested live). Multi-reviewer panels (see "Panels" and the panel
 addendum in ROLES.md) remain wired but unexercised; expect rough edges
 the first time and fix them here.
 
-Rough edges from the exercise, filed:
+Rough edges from the exercises, filed:
 
 - Spawning `claude -p` from an orchestrator harness with permission
   prompts: the auto-mode classifier blocked the executor spawn until a
   `Bash(claude -p*)` allow rule was added, and the prompt had to be
   delivered via stdin - `$(cat ...)` command substitution stayed
   blocked. So `bypassPermissions` on the executor is not the whole
-  story; the orchestrator side needs the allow rule and stdin delivery.
+  story; the orchestrator side needs the allow rule and stdin
+  delivery. Checked again on 2026-10-21 under herdr: the
+  headless spawn passed with no such rule, while the hosted `herdr
+  agent start` had to be allowed explicitly, so the classifier has
+  moved and the two spawn forms gate differently. A statement about
+  those harnesses on those days, not about the classifier in general.
 - The codex `workspace-write` sandbox cannot run nix builds (store
   cache writes are denied, and the fetcher's lock with them), so codex
   reviewer and conformance seats cannot reproduce build-dependent
@@ -858,7 +1008,11 @@ Rough edges from the exercise, filed:
   builds and runtime checks. That kept the letter of "the orchestrator
   implements nothing" while the diagnosis drifted to the orchestrator
   too - which is why the split is now bounded in "When the executor's
-  sandbox cannot validate" rather than left to judgment.
+  sandbox cannot validate" rather than left to judgment. Hit again on the
+  hosted path (2026-10-21) by a codex conformance seat, where it
+  arrived as a live input wait; the answer filed here is the one the
+  human chose, decline the escalation and judge from the
+  orchestrator's recorded gate evidence.
 - ARTIFACTS.md defined no worklog type for the validation gate's
   evidence, so ad-hoc `[validation]` entries were used across several
   plans (~16 in bump-lavish-axi alone) before the type existed. Closed:
@@ -891,3 +1045,96 @@ Rough edges from the exercise, filed:
   by an append-only `[decision]` in that worklog. Pre-commit
   milestones take `[handoff]` (or the entry type of the event itself);
   `[done]` is reserved for landed work.
+- Closing the last seat pane closes the workspace. "The plan workspace"
+  promises the root pane stays a plain shell, the anchor and the
+  human's way in, but says nothing about it already being gone: five
+  settled seats were closed in a workspace whose root pane no longer
+  existed, and the workspace went with them. Nothing durable was lost
+  (checkout on disk, branch intact, the entry `<UNOPENED>`, reopened
+  by branch), but either the root pane needs protecting or seat
+  teardown needs to check for the anchor first.
+- `agent prompt`'s `agent_blocked` guard is real, confirmed by accident
+  during the herdr run: it refused a blocked seat before sending any
+  input. Worth stating precisely, because the looser reading ("agent
+  prompt protects you from dialogs") is wrong - a codex upgrade dialog
+  that appeared after `agent start` had already reported idle was
+  prompted into, which is a race around the guard rather than an
+  absence of it.
+- A "no" option that redirects needs the redirection supplied. codex's
+  decline reads "No, and tell Codex what to do differently (esc)";
+  relaying the keys that select it interrupted the turn and left the
+  seat stalled with nothing written, until it was re-prompted with the
+  instruction the option asks for. Relaying the human's exact choice is
+  not the whole relay when that choice is a redirect.
+- Read-only is not a variant of the codex seat recipe. A reviewer seat
+  set read-only (to provoke a live input wait) could not write the one
+  file its role permits: under read-only the
+  `sandbox_workspace_write.writable_roots` override riding alongside it
+  does nothing. The recipe is `--sandbox workspace-write` plus the
+  writable root; provoke a wait some other way.
+- A missing output file is not evidence of an abnormal seat until the
+  seat's state has been read. In the same run an absent review file was
+  read as a seat that had settled without writing; the wait had
+  returned on `blocked`, and the seat had finished its review and was
+  parked at an approval dialog.
+- The two human-facing signals this plan specified were both written in
+  flags that render nothing. A toast is an overlay drawn in a corner of
+  the herdr TUI, not a macOS notification: `notification show` without
+  `--position` lands wherever the build defaults to, and three calls
+  that each returned `shown: true` reached nobody before the flag was
+  found. The blocker mark was `--state-label` plus `--token`, both
+  stored and API-readable, and the agents panel showed no blocked text
+  at all; `--display-agent` renders because the panel draws the agent
+  name. Generalised: this build surfaces names and labels, not
+  metadata. Both recipes above are corrected; the lesson for the next
+  one is that an API returning `shown: true` or storing a token is
+  proof the call was accepted, never that a human saw anything. The
+  subagent hook was the third instance of the same mistake, caught in
+  review rather than by looking: it reported children as tokens only,
+  so its own evidence could only ever be an `api snapshot` read. It now
+  sets a display-agent summary beside the tokens, pinned by a test that
+  drives the hook against a stub herdr and fails if the rendered half
+  disappears again. That first fix then reintroduced, at the display
+  layer, the bug the hook had already solved at the state layer: state
+  is keyed per pane AND session because a nested child session shares
+  its parent's pane, while the override is keyed per pane and source,
+  so a nested session ending cleared a parent's live children. Caught
+  in review again. When a correction adds a second layer of state,
+  check whether the first layer's keying was load-bearing. Worth knowing for any
+  such pair: metadata is stored per source and the panel shows the most
+  recent writer, with a cleared source falling back to another's stored
+  value, so the subagent summary and the blocked mark above coexist on
+  one pane - whichever wrote last shows, and clearing the summary
+  restores the mark (measured 2026-10-21).
+- A reported session id took three independent preconditions, and each
+  of the first two looked sufficient until measured. `herdr
+  integration install codex` moved status to `current (v8)` and a seat
+  spawned after it still returned `agent_session=None`, because codex
+  0.163.0 parks the newly registered SessionStart hook behind a trust
+  review ("1 hook needs review before it can run", Installed 1 /
+  Active 0). A human trusted the hook and a freshly spawned seat still
+  returned `None`, at start and across four polls. One prompt later
+  the same seat reported its thread id. So: installed, trusted, and
+  having taken a turn - with the third the one no configuration
+  implies, since a thread has no id before there is a conversation.
+  The operational consequence is in "Session record": for a hosted
+  codex seat the id is readable after the first prompt, not at
+  `agent start`, so an orchestrator that reads `agent get` once at
+  spawn records "no thread id surfaced" wrongly. Every codex
+  `[session]` id entry in this plan was written that way; they are
+  honest records of what was observed then, and the rule they implied
+  was wrong.
+- That same probe found the bound on `agent prompt`'s guard. herdr
+  0.9.0 did not classify codex's hook-trust modal as `blocked`: the
+  seat reported `idle` with `interactive_ready: true` at `agent start`
+  and `done` afterwards, so the `agent_blocked` refusal could not fire,
+  `agent prompt --wait` was accepted and timed out, and the prompt text
+  never reached codex. The guard protects the states herdr calls
+  blocked and nothing else, which is the same shape as the codex
+  upgrade dialog above. A seat that will not take a prompt is read with
+  `agent read --source visible` before anything is resent.
+- Claude Code renders a suggested next prompt in an idle seat's input
+  box, visually indistinguishable from text a human typed; an
+  orchestrator reading a pane mistook one for human steering. Nothing
+  in a pane transcript proves a human typed it, which is why steering
+  arriving as a worklog `[decision]` is load-bearing rather than tidy.
