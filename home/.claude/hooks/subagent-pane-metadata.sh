@@ -6,6 +6,20 @@
 # metadata token per live child on the pane (`herdr pane report-metadata`,
 # source below) and clears it when the child stops.
 #
+# Tokens are for machine readers: on herdr 0.9.0 the panels render names and
+# labels, not metadata, so a token is readable through `herdr api snapshot`
+# and invisible to the human (measured 2026-10-21). What renders is the agent
+# name, so the live roster is also summarised into one `--display-agent`
+# override on the pane, cleared when the pane's last child goes. That override
+# is per (pane, source) while state is per (pane, session), so the summary is
+# built from every session's roster on the pane and written under a pane-wide
+# lock: a nested child session shares its parent's pane, and a per-session
+# display would blank a parent's live children when the nested one ended.
+# Metadata is stored per source and the panel shows the most recent writer,
+# with a cleared source falling back to another source's value - so this
+# override and plan-skills' own blocked mark coexist: whichever wrote last
+# shows, and clearing this one restores theirs.
+#
 # Deliberately NOT named herdr-*: it sits beside herdr's managed
 # herdr-agent-state.sh, which herdr's integration installer owns and
 # overwrites, and the name keeps the two namespaces apart. Nothing here
@@ -87,6 +101,12 @@ RESTART_SOURCES = ("startup", "resume", "clear")
 TOKEN_MAX = 32
 LABEL_MAX = 28
 VALUE_MAX = 48
+# The display override replaces the agent name in the agents panel, so it stays
+# short enough to read there.
+DISPLAY_MAX = 64
+BASE_NAME = ".base"
+DISPLAY_LOCK = ".display.lock"
+BASE_FALLBACK = "claude"
 # Decision 11's completion-toast threshold. 0 disables the toasts.
 TOAST_MS = 60000
 # A state directory whose last event is older than this belongs to a session
@@ -134,15 +154,44 @@ def herdr_call(args):
         pass
 
 
-def report(agent_id, label, activity):
+def herdr_out(args):
+    try:
+        done = subprocess.run(
+            [herdr] + args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            timeout=5,
+        )
+        return done.stdout.decode("utf-8", "replace")
+    except Exception:
+        return ""
+
+
+def report(agent_id, label, activity, display=None):
     value = "%s: %s" % (label[:LABEL_MAX], activity)
-    herdr_call(["pane", "report-metadata", pane, "--source", SOURCE,
-                "--token", "%s=%s" % (token_name(agent_id), value[:VALUE_MAX])])
+    args = ["pane", "report-metadata", pane, "--source", SOURCE,
+            "--token", "%s=%s" % (token_name(agent_id), value[:VALUE_MAX])]
+    # One call carries both halves: the token for machine readers and the
+    # roster summary the panel renders. These events fire on every tool call a
+    # child makes, so they stay one herdr invocation rather than two.
+    if display:
+        args += ["--display-agent", display[:DISPLAY_MAX]]
+    herdr_call(args)
 
 
 def clear(agent_id):
     herdr_call(["pane", "report-metadata", pane, "--source", SOURCE,
                 "--clear-token", token_name(agent_id)])
+
+
+def show_display(text):
+    herdr_call(["pane", "report-metadata", pane, "--source", SOURCE,
+                "--display-agent", text[:DISPLAY_MAX]])
+
+
+def clear_display():
+    herdr_call(["pane", "report-metadata", pane, "--source", SOURCE,
+                "--clear-display-agent"])
 
 
 def toast(title, body):
@@ -160,13 +209,17 @@ def state_path(agent_id):
     return os.path.join(state_dir, slug(agent_id, ""))
 
 
-def load(agent_id):
+def load_path(path):
     try:
-        with open(state_path(agent_id), encoding="utf-8") as handle:
+        with open(path, encoding="utf-8") as handle:
             state = json.load(handle)
         return state if isinstance(state, dict) else {}
     except Exception:
         return {}
+
+
+def load(agent_id):
+    return load_path(state_path(agent_id))
 
 
 def save(agent_id, state):
@@ -187,11 +240,125 @@ def drop(agent_id):
         pass
 
 
-def live_ids():
-    if not os.path.isdir(state_dir):
+def roster_names(directory):
+    try:
+        return [name for name in sorted(os.listdir(directory))
+                if not name.endswith(".tmp") and not name.startswith(".")]
+    except Exception:
         return []
-    return [name for name in sorted(os.listdir(state_dir))
-            if not name.endswith(".tmp") and not name.startswith(".")]
+
+
+def live_ids():
+    return roster_names(state_dir)
+
+
+def pane_rosters():
+    """Every live child on this pane, across sessions.
+
+    The display override is keyed per (pane, source) while state is keyed per
+    (pane, session) - a nested child session shares its parent's pane, which is
+    why state is split that way. So the summary is built from every session's
+    roster, or a nested session ending would blank a parent's live children,
+    which is exactly the bug the per-session state layer exists to avoid. A
+    session that died without SessionEnd keeps its children here until the
+    prune, the same lifetime its tokens already have: mtime is not liveness,
+    since a child inside one long tool call emits nothing at all.
+    """
+    out = []
+    for session in sorted(roster_names(pane_dir)):
+        directory = os.path.join(pane_dir, session)
+        for name in roster_names(directory):
+            out.append((directory, name))
+    return out
+
+
+def base_name():
+    """The pane's own agent name, so the override adds to it instead of
+    replacing the identity. One `agent list` read per session, cached beside
+    the roster; a named seat reports its name, an unnamed orchestrator pane
+    reports its kind, and any failure falls back rather than blocking."""
+    cached = os.path.join(state_dir, BASE_NAME)
+    try:
+        with open(cached, encoding="utf-8") as handle:
+            name = handle.read().strip()
+        if name:
+            return name
+    except Exception:
+        pass
+    name = ""
+    try:
+        listing = json.loads(herdr_out(["agent", "list"]))
+        for agent in listing.get("result", {}).get("agents", []):
+            if agent.get("pane_id") == pane:
+                name = agent.get("name") or agent.get("agent") or ""
+                break
+    except Exception:
+        name = ""
+    name = str(name).strip() or BASE_FALLBACK
+    try:
+        os.makedirs(state_dir, exist_ok=True)
+        with open(cached, "w", encoding="utf-8") as handle:
+            handle.write(name)
+    except Exception:
+        pass
+    return name
+
+
+def display_text():
+    """Summarise the pane's live children into the one thing panels render.
+
+    None when the pane has no child left, which means clear the override.
+    """
+    entries = pane_rosters()
+    if not entries:
+        return None
+    labels = []
+    for directory, name in entries:
+        state = load_path(os.path.join(directory, name))
+        labels.append((str(state.get("label") or "subagent")[:LABEL_MAX],
+                       str(state.get("activity") or "working")))
+    if len(labels) == 1:
+        label, activity = labels[0]
+        return "%s +%s: %s" % (base_name(), label, activity)
+    return "%s +%d subagents: %s" % (base_name(), len(labels),
+                                     ", ".join(label for label, _ in labels))
+
+
+def display_lock():
+    """Serialise compute-then-write of the shared override, pane-wide.
+
+    Two sessions on one pane both derive the summary from the same rosters, so
+    without this a stale computation can land after a fresher one and leave the
+    override naming a child that has stopped. Always taken while this session's
+    own lock is held and never the other way round, so sessions cannot deadlock
+    on each other.
+    """
+    try:
+        os.makedirs(pane_dir, exist_ok=True)
+        handle = os.open(os.path.join(pane_dir, DISPLAY_LOCK),
+                         os.O_RDWR | os.O_CREAT, 0o600)
+        fcntl.flock(handle, fcntl.LOCK_EX)
+        return handle
+    except Exception:
+        return None
+
+
+def refresh_display():
+    """Recompute and write the override, for the paths that only remove."""
+    handle = display_lock()
+    try:
+        text = display_text()
+        if text:
+            show_display(text)
+        else:
+            clear_display()
+    finally:
+        if handle is not None:
+            try:
+                fcntl.flock(handle, fcntl.LOCK_UN)
+                os.close(handle)
+            except Exception:
+                pass
 
 
 def acquire_lock(may_create):
@@ -232,7 +399,17 @@ def touch(agent_id, label=None, activity=None, create=True):
         state["activity"] = activity
     state.setdefault("activity", "working")
     save(agent_id, state)
-    report(agent_id, str(state["label"]), str(state["activity"]))
+    handle = display_lock()
+    try:
+        report(agent_id, str(state["label"]), str(state["activity"]),
+               display=display_text())
+    finally:
+        if handle is not None:
+            try:
+                fcntl.flock(handle, fcntl.LOCK_UN)
+                os.close(handle)
+            except Exception:
+                pass
     return state
 
 
@@ -240,13 +417,18 @@ def forget_all():
     for agent_id in live_ids():
         clear(agent_id)
         drop(agent_id)
+    # Not an unconditional clear: another session on this pane may still have
+    # children, and its parent could be inside a long silent tool call with no
+    # event coming to restore the override.
+    refresh_display()
     # Only reached when the session is starting or over, so no other holder of
-    # this lock exists; unlinking it lets the directory go instead of lingering
-    # until the prune.
-    try:
-        os.remove(os.path.join(state_dir, LOCK_NAME))
-    except Exception:
-        pass
+    # this lock exists; unlinking it - and the cached base name with it - lets
+    # the directory go instead of lingering until the prune.
+    for leftover in (LOCK_NAME, BASE_NAME):
+        try:
+            os.remove(os.path.join(state_dir, leftover))
+        except Exception:
+            pass
     try:
         os.rmdir(state_dir)
     except Exception:
@@ -275,6 +457,7 @@ elif action == "subagent-stop":
     state = load(agent_id)
     clear(agent_id)
     drop(agent_id)
+    refresh_display()
     started = state.get("start_ms")
     if TOAST_MS > 0 and isinstance(started, int):
         elapsed = int(time.time() * 1000) - started
@@ -306,6 +489,7 @@ elif action == "stop":
         else:
             clear(known)
             drop(known)
+    refresh_display()
 
 elif action == "session":
     # Subagents get SubagentStart, not SessionStart, in this Claude Code - but
@@ -322,7 +506,8 @@ elif action == "session":
     cutoff = time.time() - PRUNE_S
     try:
         stale = [name for name in os.listdir(pane_dir)
-                 if os.path.getmtime(os.path.join(pane_dir, name)) < cutoff]
+                 if not name.startswith(".")
+                 and os.path.getmtime(os.path.join(pane_dir, name)) < cutoff]
     except Exception:
         stale = []
     for name in stale:
@@ -332,9 +517,13 @@ elif action == "session":
         except Exception:
             orphans = []
         for child in orphans:
-            if not child.endswith(".tmp"):
+            # Same filter as live_ids: .lock and .base are ours, not children.
+            if not child.endswith(".tmp") and not child.startswith("."):
                 clear(child)
         shutil.rmtree(abandoned, ignore_errors=True)
+    if stale:
+        # Those children left the pane's roster, so the summary changes.
+        refresh_display()
 
 elif action == "session-end":
     forget_all()
