@@ -436,6 +436,19 @@ needs. Interrupting the orchestrator only abandons its wait - the
 seat runs on in its pane - so an urgent stop follows its own rule
 below.
 
+**Reading the panel.** The orchestrator classifies from `herdr agent
+get`, never from the screen, but the human reads the agents panel, so
+know what they are looking at. Each entry shows the agent name and a
+state glyph; on 0.9.0 the glyphs are circle idle, check done,
+half-circle working, cross blocked - measured against `agent list`
+for the same panes, after a first reading taken from a single
+correlation turned out to be wrong. The cross is the one to recognise
+on sight: it marks a seat parked at a live input wait, the state these
+recipes exist to surface. The name is the only text the entry carries,
+which is why a `--display-agent` override is how anything else
+(a parked `[blocker]`, the orchestrator's own subagents) reaches the
+eye. When a glyph and an expectation disagree, `agent get` settles it.
+
 **Urgent stop.** The human interrupting the orchestrator no longer
 kills the seat: the hosted executor keeps running with whatever build
 or test children it spawned. The hosted urgent stop quiesces the
@@ -888,17 +901,39 @@ session in the primary workspace and every seat a live herdr agent in
 the plan's own worktree workspace. Entry points were verified current
 before it began, since the exercise is meaningless against stale ones.
 
-Witnessed across that run, each sampled rather than inferred:
+Witnessed, each sampled rather than inferred. Two plans' workspaces
+appear below and the lifecycle evidence is not pooled: the vehicle
+micro-plan's own workspace covers what its run produced, and the
+longer-lived evidence is this plan's, dated to the runs that produced
+it.
 
-- The worktree workspace as the plan's home: created at its first
-  item, carrying every item and invocation since, and grouped under
-  the repo (herdr reports it a linked worktree keyed to the primary
-  checkout's `.git`). It survived both kinds of loss - a five-day
-  pause with its seats still alive, and an accidental `workspace
-  close`, after which the lookup read `<UNOPENED>` and `worktree open
-  --branch` reopened the same checkout. One branch has had three
-  workspace ids across the plan, which is why the lifecycle keys on
-  the branch and never the id.
+- The vehicle run's workspace (plan-sync-publish-gate, 2026-10-21):
+  created at its first item by `worktree create`, grouped under the
+  repo (herdr reports it a linked worktree keyed to the primary
+  checkout's `.git`), hosting three seats, and persisting across the
+  executor's `[blocker]` and steering resume and every review round of
+  that item. It is still open, carrying its status token, because that
+  item is reviewed and uncommitted and the teardown gate refuses while
+  it is not `done <commit>`. So persistence *after* an item completes
+  is not something that run has shown, and neither is an orchestrator
+  stop-and-reenter: its orchestrator session never ended while it was
+  live. Both were decided rather than overlooked - a human `[decision]`
+  of 2026-10-21 accepts this plan's own workspace below as the named
+  substitution for those two observations, with no further runs, on the
+  ground that the implementation under test is identical and that
+  workspace exercised it on harder work than a single-item micro-plan
+  could stage.
+- The longer-lived workspace lifecycle, from this plan's own
+  (herdr-seat-visibility, w7 then wT then wX): created at its first
+  item and carrying every item and invocation since, including five
+  items through completion. It survived both kinds of loss - a five-day
+  pause between orchestrator sessions, 2026-10-14 to 2026-10-19, with
+  the workspace, its checkout and its seats still alive, which is the
+  stop-and-reenter case (recovery arm 1), and an accidental `workspace
+  close` on 2026-10-21, after which the lookup read `<UNOPENED>` and
+  `worktree open --branch` reopened the same checkout (arm 3). One
+  branch has had three workspace ids across the plan, which is why the
+  lifecycle keys on the branch and never the id.
 - Hosted seats end to end: claude executors at `bypassPermissions`,
   codex reviewer and conformance seats at `workspace-write` with the
   plan-dir writable root, prompt via file, settled-state waits, exit
@@ -932,6 +967,58 @@ Witnessed across that run, each sampled rather than inferred:
   those were tokens, and tokens render nowhere on this build (below).
   The hook now also summarises its live roster into one
   `--display-agent` override, which is the half a human can see.
+- Subagent presence as something the human saw, which review had to
+  hold open until it was real. The lifecycle above was API sampling,
+  and the
+  `--display-agent` summary that replaces it was first driven only with
+  synthetic hook events against a stub and against live herdr. The
+  witness came after the work landed: the fix merged, the primary
+  checkout pulled - which is what made the hook live, no rebuild, the
+  existing link picking up the content - the live file confirmed as the
+  fixed one, and a ~200s child run, after which the human reported the
+  pane's agents-panel entry reading `claude +Witness probe subagent:
+  ...` where it had always read plain `claude`. The orchestrator's
+  snapshot at that moment carried the same string in `display_agent`
+  beside the per-child token.
+
+  One child was not the criterion, which asks for overlap and for the
+  clearing, so two more were run with staggered lifetimes (~90s and
+  ~240s) and the human confirmed all three stages on the same entry:
+  both live, `claude +2 subagents: Explore, general-purpose`; the short
+  one finished and the long one still running, `claude +Overlap child
+  long: Bash`; the last one finished, back to plain `claude`. The
+  middle stage is the load-bearing one - it shows the roster tracking
+  children individually rather than toggling on "any child alive",
+  which is what the per-child state layer is for and what no
+  single-child run can distinguish - and the third is the clearing seen
+  rather than sampled. Item 3's label upgrade showed in the panel in
+  both runs: the override read the agent type while a child ran
+  (`claude +general-purpose: Bash`) and the task description once the
+  parent's Stop arrived.
+
+  What makes an edit live is worth keeping separate from the witness:
+  it depends on how the machine links authored files. Where they are
+  linked out of store - the installed hook's link chain resolving into
+  a checkout - merging and pulling there is enough, and a rebuild is
+  needed only when a *new* link appears; on a machine without that
+  option the installed copy is a store path and a rebuild is the only
+  route. The contract stays pinned by `tests/subagent-hook.test.sh`,
+  because a stub proves what the hook sends and only a human proves
+  anyone can see it.
+
+  The event-silent case is in there rather than alongside it, which is
+  only clear from how the probes were written: every probe child in
+  this exercise ran exactly one tool call, a single `perl -e
+  'select(undef,undef,undef,N)'` under Bash, emitting nothing for its
+  whole life - which is why the displayed activity read `Bash`
+  unbroken rather than changing as a real child's would. So the
+  overlap stage the human watched, roughly 95s to 245s into the long
+  child, was a child held visible through one silent tool call, not
+  merely a long-lived one. The mechanism behind that is worth knowing
+  separately: the override carries no expiry and only a roster change
+  rewrites it, so nothing makes a display lapse on its own. What can
+  strand one is a session that dies without SessionEnd, whose children
+  stay in the roster until the prune.
 - The headless fallback, run rather than assumed: with `HERDR_ENV` and
   the caller context vars unset the selection check chose the headless
   recipes, and `claude -p ... --output-format json` returned its
@@ -961,24 +1048,6 @@ What that run does not establish:
 - Teardown of a real plan's workspace at plan completion. The full
   cycle has been exercised only on a throwaway; no real plan has
   earned it yet.
-- Subagent presence as something the human saw. The lifecycle above was
-  sampled through the API, and the `--display-agent` summary that
-  replaces it was driven against live herdr with synthetic hook events
-  (roster of one, overlap of two, label upgrade at the parent's Stop,
-  per-child clearing, the compaction guard, and coexistence with the
-  blocked mark) rather than by a run with real children in a panel the
-  human was watching. Nor is the hook in that tree the installed one:
-  what makes an edit live depends on how the machine links authored
-  files. On the verified setup they are linked out of store - the
-  installed hook's link chain resolves into the primary checkout - so
-  merging the work and pulling there is what makes the new version
-  live, with no rebuild; a rebuild is needed only when a *new* link
-  appears. On a machine without that option the installed copy is a
-  store path and a rebuild is the only route. Either way, until a live
-  hook reports real children and the human confirms the panel, API
-  token presence is not the criterion met - which is why the contract
-  is pinned by `tests/subagent-hook.test.sh` rather than by one
-  hand-driven run.
 
 Not yet witnessed: an abnormal exit (the classification path is
 untested live). Multi-reviewer panels (see "Panels" and the panel
