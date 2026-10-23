@@ -784,15 +784,42 @@ branch. Two ways to earn it and no third:
 - **Abandonment**: an explicit human `[decision]` in the worklog.
   Nothing else substitutes for it.
 
-Before removing, confirm every seat has settled and its pane is
-closed. `worktree remove` closes the workspace's panes whatever is
-running in them: a live seat or a running build dies silently, with no
-refusal to catch the mistake. A checkout with uncommitted or untracked
-files does refuse, with `dirty_worktree_requires_force`, and `--force`
-discards that work - so the orchestrator shows the human
-`git status --porcelain` from the checkout and forces only on their
-word. Never `workspace close --group`: that takes the primary
-workspace with it.
+Before removing, confirm every seat has settled and that no pane in
+the workspace is running anything: `herdr pane list --workspace
+<workspace-id>` enumerates the panes and
+`herdr pane process-info --pane <pane-id>` names each one's foreground
+processes, which is the check. `worktree remove` closes the
+workspace's panes whatever is running in them: a live seat or a
+running build dies silently, with no refusal to catch the mistake.
+That hazard is a live process, not an open pane - closing the panes
+first is one way to establish the precondition, never the
+precondition itself, and a pane left open on an idle shell is no
+reason to delay a teardown that is otherwise earned. A checkout with
+uncommitted or untracked files does refuse, with
+`dirty_worktree_requires_force`, and `--force` discards that work - so
+the orchestrator shows the human `git status --porcelain` from the
+checkout and forces only on their word. Never
+`workspace close --group`: that takes the primary workspace with it.
+
+Closing panes is also how a workspace is lost, which is the other
+half of why the precondition is worded as it is. The root pane is the
+workspace's anchor; when it is already gone - observed twice - closing
+the last seat pane closes the workspace with it, and
+`worktree remove --workspace` is then left with no id to target.
+Nothing durable goes: the checkout stays on disk and the branch is
+intact - `herdr worktree list` still carries the entry, now with no
+`open_workspace_id` (the panel renders that `<UNOPENED>`), which is
+how the case is recognized from outside. Reopen by branch and remove
+the workspace that reopening returns:
+
+```bash
+herdr worktree open --branch work/<slug> --no-focus
+herdr worktree remove --workspace <workspace-id from that open>
+```
+
+Teardown should not need that detour, and under the precondition
+above it does not: nothing asks for the panes to be closed, so the
+anchor is never spent satisfying a rule.
 
 Adding a profile for another agent CLI means adding a section here: a new
 command, a resume command, and where its session id lives. The protocol
@@ -1114,14 +1141,14 @@ Rough edges from the exercises, filed:
   by an append-only `[decision]` in that worklog. Pre-commit
   milestones take `[handoff]` (or the entry type of the event itself);
   `[done]` is reserved for landed work.
-- Closing the last seat pane closes the workspace. "The plan workspace"
-  promises the root pane stays a plain shell, the anchor and the
-  human's way in, but says nothing about it already being gone: five
-  settled seats were closed in a workspace whose root pane no longer
-  existed, and the workspace went with them. Nothing durable was lost
-  (checkout on disk, branch intact, the entry `<UNOPENED>`, reopened
-  by branch), but either the root pane needs protecting or seat
-  teardown needs to check for the anchor first.
+- Closing the last seat pane closes the workspace, twice observed:
+  five settled seats closed in a workspace whose root pane no longer
+  existed took the workspace with them. Teardown now survives it -
+  "The plan workspace" states the precondition as nothing running
+  rather than panes closed, and carries the reopen-by-branch recovery
+  for a workspace already lost - so what is left here is the root
+  pane's own lifecycle: why the anchor disappears, and whether it
+  should be protected from being closed at all, is undiagnosed.
 - `agent prompt`'s `agent_blocked` guard is real, confirmed by accident
   during the herdr run: it refused a blocked seat before sending any
   input. Worth stating precisely, because the looser reading ("agent

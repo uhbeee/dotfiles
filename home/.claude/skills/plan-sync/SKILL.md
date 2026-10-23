@@ -50,11 +50,19 @@ Steps:
    fetched remote history, not the human's merge). Short of both, say
    so and leave the workspace open; that is the normal outcome of a
    mid-plan sync. When both hold, confirm with the human that the plan
-   is finished, that every seat has settled and its pane is closed,
+   is finished, that every seat has settled and that no pane in the
+   workspace is running anything - the hazard `worktree remove` poses
+   is a live process, not an open pane, and
+   `herdr pane process-info --pane <pane-id>` over the panes
+   `herdr pane list --workspace <workspace-id>` returns is the check -
    and that the checkout is clean, then
    `herdr worktree remove --workspace <workspace-id>`; the branch
-   survives. Abandonment is the human's `[decision]`, never yours, and
-   `--force` over a dirty checkout needs their explicit word.
+   survives. A workspace already closed under you (the lost-anchor
+   case that section documents) is reopened with
+   `herdr worktree open --branch work/<slug> --no-focus` and removed
+   by the id that returns. Abandonment is the human's `[decision]`,
+   never yours, and `--force` over a dirty checkout needs their
+   explicit word.
 6. **Republish, if the plan's surface is in use**: drain pending
    feedback first, per ARTIFACTS.md ("The review surface"), and that
    poll runs on every sync whatever the surface - on a chat-reviewed
