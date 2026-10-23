@@ -345,7 +345,10 @@ mid-plan-sync-normal|normal outcome of a mid-plan sync
 human-owns-doc-commit|owns the commit of the doc updates|owns every commit
 report-findings-and-path|findings and the file path|findings to the (human|user) with the file path
 findings-become-new-round|new plan-item-review round
-teardown-needs-pane-closed|pane is closed|panes closed
+teardown-needs-nothing-running|no pane in the workspace is running anything
+teardown-check-is-process-info|pane process-info
+teardown-hazard-is-process-not-pane|live process, not an open pane
+teardown-reopen-lost-workspace|lost-anchor case
 archive-copies-directory|copy the (plan )?directory there
 archive-one-index-line|one index line
 one-reviewer-invocation|one reviewer invocation
@@ -531,7 +534,9 @@ archive-single-index|archive-existing-index-wins
 terminal-gate|conformance-after-all-items-closed
 blocking-edges|blocking-edge-needs-commit-on-branch
 default-branch-resolution|never-origin-ref
-teardown-gate|teardown-needs-pane-closed
+teardown-gate|teardown-needs-nothing-running
+teardown-needs-nothing-running|teardown-check-is-process-info
+teardown-needs-nothing-running|teardown-hazard-is-process-not-pane
 archive-single-index|archive-one-index-line
 republish-with-plan-publish|publish-gate-reads-field
 publish-skipped-on-chat|skip-reported-at-pause
@@ -600,9 +605,10 @@ condition_report() { # condition_report <claude skills root> <codex skills root>
 # per span rather than per clause because the first version of this
 # layer asked only whether a clause matched anything, and an
 # unregistered instruction sharing a clause with a registered one -
-# the teardown prerequisite "and its pane is closed" - was therefore
-# invisible to the registry and to the snapshot at once. What this
-# still cannot do is judge the change for you: it forces a look, and a
+# the teardown prerequisite "and its pane is closed", since reworded
+# as "no pane ... is running anything" - was therefore invisible to
+# the registry and to the snapshot at once. What this still cannot
+# do is judge the change for you: it forces a look, and a
 # careless regeneration will accept a one-sided edit. That is the
 # honest end of a text-level check over two deliberately
 # differently-worded documents.
@@ -904,7 +910,8 @@ mutate_unpoliced_add() {
 # half a gate matches - the audit-3 escape, where clause-level
 # coverage treated the whole clause as accounted for.
 mutate_partial_prerequisite() {
-  perl -0pi -e 's/ and its pane is closed,//' "$1/claude/plan-sync/SKILL.md"
+  perl -0pi -e 's/ and that no pane in the\s+workspace is running anything//s' \
+    "$1/claude/plan-sync/SKILL.md"
 }
 # The same boundary with nothing registered on either half: a fragment
 # that only layer 6's remainder can see.
@@ -929,7 +936,7 @@ control "a whole named step deleted" "gate: plan-implement: codex covers 'review
 control "a gate's prerequisite removed from the claude side" "gate: plan-create: codex covers 'signoff-needs-explicit-approval'" mutate_condition_claude
 control "a gate's prerequisite removed from the codex side" "gate: plan-create: claude covers 'signoff-needs-explicit-approval'" mutate_condition_codex
 control "a prerequisite dropped from both sides at once" "action without its condition: plan-create (claude): 'signoff-flips-status' is stated but 'signoff-needs-explicit-approval' is not" mutate_condition_both condition_report
-control "a prerequisite deleted from inside a matched clause" "gate: plan-sync: codex covers 'teardown-needs-pane-closed'" mutate_partial_prerequisite
+control "a prerequisite deleted from inside a matched clause" "gate: plan-sync: codex covers 'teardown-needs-nothing-running'" mutate_partial_prerequisite
 control "an unregistered fragment deleted from inside a matched clause" "unpoliced text vanished: claude/plan-create: Pause for the human [gate] , as always" mutate_partial_fragment unpoliced_report
 control "a clause deleted from the unpoliced region" "unpoliced text vanished: claude/plan-sync: Do not take the session's memory" mutate_unpoliced_delete unpoliced_report
 control "a clause added to the unpoliced region" "unpoliced text appeared: claude/plan-sync: Prefer the blue path" mutate_unpoliced_add unpoliced_report

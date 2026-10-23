@@ -173,6 +173,7 @@ claude/plan-sync: - plan directory (and optionally which work item just landed)
 claude/plan-sync: [gate] and which field value caused it, and report what changed
 claude/plan-sync: [gate] first, per ARTIFACTS.md ("The review surface"), and that [gate] whatever the surface - on a chat-reviewed plan it normally [gate] , which is its expected reading there
 claude/plan-sync: [gate] ment is the human's [decision], never yours, and --force over a dirty checkout needs their explicit word
+claude/plan-sync: A workspace already closed under you (the [gate] that section documents) is reopened with herdr worktree open --branch work/<slug> --no-focus and removed by the id that returns
 claude/plan-sync: adding, dropping or [gate] themselves after approval changes the approved plan and takes a [decision]
 claude/plan-sync: an [gate] , because the field is an opt-out and no plan silently loses a surface its human wants
 claude/plan-sync: Anything that would [gate] is the human's call to change, not yours - raise it instead of editing
@@ -202,7 +203,7 @@ claude/plan-sync: the branch survives
 claude/plan-sync: The human [gate]
 claude/plan-sync: Then [gate]
 claude/plan-sync: update [gate] that got answered and any current state the plan asserts that is no longer true
-claude/plan-sync: When both hold, [gate] that the plan is finished, that every [gate] and its [gate] , and that the [gate] , then herdr worktree remove --workspace <workspace-id>
+claude/plan-sync: When both hold, [gate] that the plan is finished, that every [gate] and that [gate] - the hazard worktree remove poses is a [gate] , and herdr [gate] --pane <pane-id> over the panes herdr pane list --workspace <workspace-id> returns is the check - and that the [gate] , then herdr worktree remove --workspace <workspace-id>
 claude/plan-sync: Workspace, for a plan with a worktree workspace
 claude/plan-sync: You are the orchestrator
 codex/plan-archive: [gate] is the user's call, [gate] [decision] worklog entry)
@@ -363,6 +364,7 @@ codex/plan-sync: [decision] [gate] , and a [done] entry [gate] (a reviewed item 
 codex/plan-sync: [gate] and which field value caused it, and report what changed
 codex/plan-sync: [gate] first, per ARTIFACTS.md ("The review surface"), and that [gate] whatever the surface - on a chat-reviewed plan it normally [gate] , which is its expected reading there
 codex/plan-sync: [gate] ment is the user's [decision], never yours, and --force over a dirty checkout needs their explicit word
+codex/plan-sync: A workspace already closed under you (the [gate] that section documents) is reopened with herdr worktree open --branch work/<slug> --no-focus and removed by the id that returns
 codex/plan-sync: an [gate] , because the field is an opt-out and no plan silently loses a surface its user wants
 codex/plan-sync: and append to worklog.md
 codex/plan-sync: Anything you actually need before you can continue is not that kind of question
@@ -387,6 +389,6 @@ codex/plan-sync: This skill writes files, so it runs in Default mode, where requ
 codex/plan-sync: update breakdown.md (item status - [gate] the user's commit exists, done <commit> only once it does, and on a plan with a worktree workspace that commit is the work-branch commit that delivered the item, [gate] , since one item can land as more than one commit and the work branch carries other items' commits too - confirm it is on the branch with git merge-base --is-ancestor <commit> work/<slug> before writing it, because that is exactly what a successor's blocking edge will check, while the [gate] keeps the unchanged rule - plus deviations and the [gate] )
 codex/plan-sync: update plan.md's answered [gate] and stale current state - [gate] , while adding, dropping or [gate] after approval takes a [decision] - raising rather than editing anything that would [gate]
 codex/plan-sync: What no mode changes
-codex/plan-sync: When both hold, [gate] that the plan is finished, that every [gate] and its [gate] , and that the [gate] , then herdr worktree remove --workspace <workspace-id>
+codex/plan-sync: When both hold, [gate] that the plan is finished, that every [gate] and that [gate] - the hazard worktree remove poses is a [gate] , and herdr [gate] --pane <pane-id> over the panes herdr pane list --workspace <workspace-id> returns is the check - and that the [gate] , then herdr worktree remove --workspace <workspace-id>
 codex/plan-sync: You are the orchestrator
 codex/plan-sync: You need from the arguments or the user
