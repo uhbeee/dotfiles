@@ -40,6 +40,7 @@
     ./modules/home/common/agent-clis.nix
     ./modules/home/common/claude.nix
     ./modules/home/common/wezterm.nix
+    ./modules/home/common/default-browser.nix
     ./modules/home/darwin/herdr.nix
     ./modules/home/darwin/flycut.nix
     ./modules/home/darwin/screenshots.nix
