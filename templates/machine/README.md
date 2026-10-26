@@ -103,6 +103,11 @@ root did not take the file over (ownership and content are separate
 properties; a root-owned lock breaks the next unprivileged `nix flake lock`).
 Keep every part of the pattern on every switch.
 
+The switch raises one macOS dialog the first time: the library elects Google
+Chrome as the default browser, and LaunchServices will not take that from a
+script unsupervised. Approve it once and later rebuilds are silent; decline it
+and nothing else is affected - the next activation simply asks again.
+
 After a darwin switch, the pinned `darwin-rebuild` lives in the activated
 system at `/run/current-system/sw/bin`. The standalone composition installs
 the `home-manager` CLI from this flake's locked input
@@ -179,6 +184,10 @@ stat -f '%Su' flake.lock       # still owned by you
 nix build .#homeConfigurations."<user>@<host>".activationPackage
 ./result/activate
 ```
+
+On a Linux machine updating across the default-browser change, home-manager
+begins managing `~/.config/mimeapps.list`. An existing unmanaged one aborts the
+switch in `checkLinkTargets`; move it aside first.
 
 The lock update changes inputs; the rebuild is what applies them. Commit
 `flake.lock` only after a good rebuild: the commit history of that one file is

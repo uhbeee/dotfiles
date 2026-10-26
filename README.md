@@ -40,6 +40,9 @@ upstream. Anything broken in here is mine, not his.
 - **Shell**: zsh with autosuggestions and syntax highlighting, starship prompt, aliases
 - **CLI**: ripgrep, fd, fzf, jq, lazygit, neovim, git, gh, Hack Nerd Font
 - **Apps** via Homebrew: wezterm, claude-code, herdr
+- **Browser**: Google Chrome, installed and elected the default browser at
+  profile "full". macOS has no declarative route - the first switch raises a
+  one-time confirmation dialog, and nothing changes until it is approved.
 - **Editor**: Neovim with rose-pine moon, oil, snacks, neogit, gitsigns, which-key
 - **Agents**: one `home/AGENTS.md` shared by Claude Code, Codex and opencode,
   plus the agent skills below
@@ -88,9 +91,10 @@ edit-in-place links instead of store files. The outputs:
 - `darwinModules.default` - the macOS system preferences, self-contained
 - `nixosModules.default` - the NixOS system base (flakes enabled, zsh
   system-side), deliberately small
-- `nixosModules.gnome` - plain GNOME plus the WezTerm app, separately
-  importable: whether a host gets a desktop is the host file's decision,
-  never the home profile's
+- `nixosModules.gnome` - plain GNOME plus the WezTerm and Chrome apps,
+  separately importable: whether a host gets a desktop is the host file's
+  decision, never the home profile's. Chrome is unfree, so a host importing
+  this needs `nixpkgs.config.allowUnfree` system-side
 - `overlays.default` - the pinned-package overlay (Pi), so consumers build
   the same versions this repo tests against
 - `lib.basePackages` - the package list as data, a function of `pkgs`;
