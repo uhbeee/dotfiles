@@ -10,3 +10,4 @@
 - lavish-review-surface - archived 2026-09-29 to ~/workspace/github/ZK/plans/dotfiles/lavish-review-surface/ - final commit 180d78e
 - herdr-seat-visibility - archived 2026-10-21 to ~/workspace/github/ZK/plans/dotfiles/herdr-seat-visibility/ - final commit 508c526
 - plan-sync-publish-gate - archived 2026-10-21 to ~/workspace/github/ZK/plans/dotfiles/plan-sync-publish-gate/ - final commit a327b60
+- teardown-precondition - archived 2026-10-22 to ~/workspace/github/ZK/plans/dotfiles/teardown-precondition/ - final commit 09c9898
