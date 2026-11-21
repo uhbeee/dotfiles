@@ -5,18 +5,27 @@
 # adapters stay thin ... a step, gate, or lifecycle that exists in one
 # adapter and not its counterpart is a defect in the one that lacks it,
 # whichever way round". This test is that invariant made mechanical over
-# the authored adapters in home/.claude/skills/plan-* and
-# home/.codex/skills/plan-*.
+# every authored adapter under home/.claude/skills/ and
+# home/.codex/skills/, whichever skill family it belongs to: the
+# plan-* family the invariant was written for, and the thinking family
+# (grilling, interview-me, writing-for-agents), whose adapters are
+# equally thin pointers at a method file and drift the same way.
+# Discovery is the tree, not a family prefix - see the comment above
+# skill_set - so a family arriving later is covered without editing
+# this file, and the wiring layer reads every
+# modules/home/common/*-skills.nix rather than one module.
 #
 # Six layers. The first three are differential - the question is never
 # "does this adapter say X" but "do both say it, or neither" - and the
 # last three keep the third honest:
 #
-#   1. Shape: the same plan-* skill set on both sides, each with a
+#   1. Shape: the same skill set on both sides, each with a
 #      SKILL.md whose frontmatter name matches its directory and whose
 #      description is byte-identical to its counterpart's, and each
-#      linked for both CLIs by modules/home/common/plan-skills.nix - an
-#      adapter nobody links is an adapter nobody has.
+#      linked for both CLIs by a family module under
+#      modules/home/common/ - an adapter nobody links is an adapter
+#      nobody has, and a module linking an adapter that does not exist
+#      is the same defect the other way round.
 #   2. Vocabulary: a lexical token set per file - herdr and git command
 #      phrases, long flags, worklog entry kinds, document basenames,
 #      snake_case identifiers, plan-* skill names, ROLES.md template
@@ -85,7 +94,7 @@
 # prose-only gate deleted, a flag dropped, a whole named step deleted,
 # a gate's prerequisite removed from either side and then from both at
 # once, a clause deleted from and added to the unpoliced region, a step
-# no registry entry covers, one CLI's link dropped from the nix
+# no registry entry covers, one CLI's link dropped from a family
 # module - and assert the engine reports each one, so the check
 # is proven to fail on divergence by running, not by inspection. A
 # control only means something from a clean baseline, so each one is
@@ -103,16 +112,47 @@ bad() { echo "not ok - $1"; fail=1; }
 CLAUDE_REL="home/.claude/skills"
 CODEX_REL="home/.codex/skills"
 ROLES="$ROOT/home/.config/plan-skills/ROLES.md"
-WIRING="$ROOT/modules/home/common/plan-skills.nix"
+# The per-family wiring modules, globbed rather than listed: the glob
+# is the family registry, so a family added without touching this file
+# is still wired-checked. The two controls at the end name one module
+# each, because a fixture that drops a link has to drop it from a
+# specific family's module.
+PLAN_WIRING="$ROOT/modules/home/common/plan-skills.nix"
+THINKING_WIRING="$ROOT/modules/home/common/thinking-skills.nix"
+WIRING_MODULES=()
+for m in "$ROOT"/modules/home/common/*-skills.nix; do
+  [ -f "$m" ] && WIRING_MODULES+=("$m")
+done
 
 # --- preflight: an inspection that cannot run never reports clean ------------
 
-for required in "$ROOT/$CLAUDE_REL" "$ROOT/$CODEX_REL" "$ROLES" "$WIRING"; do
+if [ ${#WIRING_MODULES[@]} -eq 0 ]; then
+  echo "not ok - cannot check wiring: no modules/home/common/*-skills.nix exists"
+  exit 1
+fi
+
+for required in "$ROOT/$CLAUDE_REL" "$ROOT/$CODEX_REL" "$ROLES" "${WIRING_MODULES[@]}"; do
   if [ ! -e "$required" ]; then
     echo "not ok - cannot compare adapters: $required is missing"
     exit 1
   fi
 done
+
+# --- discovery: every authored adapter, no family glob ----------------------
+
+# The families this test covers do not share a prefix: plan-* has one,
+# the thinking family (grilling, interview-me, writing-for-agents) has
+# none, and a per-family glob would have to be edited for every family
+# that arrives - the failure mode where the engine silently enumerates
+# less than the tree holds. So discovery is the tree itself, every
+# skill directory authored for either CLI, and the wiring modules
+# above say which family each belongs to. An adapter no module links
+# is reported by run 1b rather than ignored, so a new family cannot
+# arrive half-wired either.
+skill_set() { # skill_set <skills root>
+  ( cd "$1" 2>/dev/null && find . -mindepth 1 -maxdepth 1 -type d ) |
+    sed 's#^\./##' | sort
+}
 
 # --- normalization -----------------------------------------------------------
 
@@ -238,6 +278,8 @@ human-validation-lines|human: validation lines
 pause-every-round|after every reviewer round
 no-closure-by-orchestrator|close an item|closes? an item
 no-editing-reviewer-text|reviewer'?s? text
+thinking-method-file|config/thinking-skills/[a-z-]+\.md
+thinking-method-is-authority|that file is the method|that file is the reference
 template-only-prompts|filled template only|nothing else in the prompt|template filled
 case-goes-in-review-file|case for an item goes into
 fresh-session|fresh session
@@ -475,7 +517,7 @@ steps_of() { # steps_of <SKILL.md>
 # separately from the findings.
 step_coverage_report() { # step_coverage_report <claude skills root>
   local croot=$1 sk unit units uncovered total=0 prose=0
-  for sk in $( (cd "$croot" && ls -d plan-*) ); do
+  for sk in $(skill_set "$croot"); do
     units=$(steps_of "$croot/$sk/SKILL.md")
     if [ -z "$units" ]; then
       # Written as prose, with no enumerated steps: at least assert the
@@ -560,7 +602,7 @@ condition_report() { # condition_report <claude skills root> <codex skills root>
       echo "broken link: $action requires $cond, but one of them is not a registry key"
     fi
   done < <(requires)
-  for sk in $( (cd "$croot" && ls -d plan-*) ); do
+  for sk in $(skill_set "$croot"); do
     for side in claude codex; do
       [ "$side" = claude ] && root=$croot || root=$xroot
       [ -f "$root/$sk/SKILL.md" ] || continue
@@ -623,7 +665,7 @@ UNPOLICED_SNAPSHOT="$ROOT/tests/adapter-parity-unpoliced.txt"
 # middle of one sentence, which is how its deletion stayed invisible.
 unpoliced_clauses() { # unpoliced_clauses <claude skills root> <codex skills root>
   local croot=$1 xroot=$2 sk side root
-  for sk in $( (cd "$croot" && ls -d plan-*) ); do
+  for sk in $(skill_set "$croot"); do
     for side in claude codex; do
       [ "$side" = claude ] && root=$croot || root=$xroot
       [ -f "$root/$sk/SKILL.md" ] || continue
@@ -659,8 +701,8 @@ parity_report() { # parity_report <claude skills root> <codex skills root>
   local croot=$1 xroot=$2 s f cfile xfile cdesc xdesc side tok why
   local cskills xskills
 
-  cskills=$( (cd "$croot" 2>/dev/null && ls -d plan-* 2>/dev/null) | sort )
-  xskills=$( (cd "$xroot" 2>/dev/null && ls -d plan-* 2>/dev/null) | sort )
+  cskills=$(skill_set "$croot")
+  xskills=$(skill_set "$xroot")
   if [ "$cskills" != "$xskills" ]; then
     comm -23 <(echo "$cskills") <(echo "$xskills") |
       sed 's/^/shape: skill present for claude and missing for codex: /' | grep . || true
@@ -716,8 +758,8 @@ parity_report() { # parity_report <claude skills root> <codex skills root>
 
 report=$(parity_report "$ROOT/$CLAUDE_REL" "$ROOT/$CODEX_REL")
 if [ -z "$report" ]; then
-  n_skills=$(cd "$ROOT/$CLAUDE_REL" && ls -d plan-* | wc -l | tr -d ' ')
-  n_tok=$(for s in $(cd "$ROOT/$CLAUDE_REL" && ls -d plan-*); do
+  n_skills=$(skill_set "$ROOT/$CLAUDE_REL" | wc -l | tr -d ' ')
+  n_tok=$(for s in $(skill_set "$ROOT/$CLAUDE_REL"); do
     tokens "$ROOT/$CLAUDE_REL/$s/SKILL.md"; done | sort -u | wc -l | tr -d ' ')
   n_gates=$(gates | grep -c .)
   ok "adapter parity: $n_skills skill pairs, $n_tok distinct vocabulary tokens, $n_gates named gates, no divergence"
@@ -728,22 +770,54 @@ fi
 # --- run 1b: both CLIs are wired to the same skill set -----------------------
 
 # An adapter directory nobody links is an adapter nobody has: the
-# module links each skill directory per CLI by hand, so a skill wired
+# modules link each skill directory per CLI by hand, so a skill wired
 # for one orchestrator and not the other diverges in effect even when
-# both files exist.
-wiring_report() { # wiring_report <plan-skills.nix>
-  local nix=$1 sk side
-  for sk in $(cd "$ROOT/$CLAUDE_REL" && ls -d plan-*); do
-    for side in claude codex; do
-      grep -qF "\".$side/skills/$sk\".source" "$nix" ||
-        echo "wiring: $sk is not linked for $side in $(basename "$nix")"
-    done
-  done
+# both files exist. Checked across every family module at once rather
+# than one module at a time, because the question is whether the
+# installed skill set matches the authored one, not which file carries
+# the line. Three ways to get it wrong, all reported: an adapter
+# linked for one CLI only, a module naming an adapter that does not
+# exist, and a link reaching inside a skill directory - the last one
+# because the whole-directory rule is load-bearing (plan-skills.nix's
+# comment: codex discovers a skill whose directory is a symlink but
+# skips a real directory holding a per-file SKILL.md symlink, so a
+# per-file link produces no entry point at all).
+links_of() { # links_of <module>...
+  grep -hoE '"\.(claude|codex)/skills/[^"]+"\.source' "$@" |
+    sed -E 's/^"\.([a-z]+)\/skills\/(.+)"\.source$/\1 \2/'
 }
 
-wiring=$(wiring_report "$WIRING")
+wiring_report() { # wiring_report <claude root> <codex root> <module>...
+  local croot=$1 xroot=$2
+  shift 2
+  local links names sk side root
+  links=$(links_of "$@" | sort -u)
+
+  grep -E '^(claude|codex) [^ ]+/' <<<"$links" |
+    sed 's#^#wiring: linked per file, link the skill directory whole: #' |
+    grep . || true
+
+  names=$( (skill_set "$croot"; skill_set "$xroot") | sort -u )
+  for sk in $names; do
+    for side in claude codex; do
+      grep -qxF "$side $sk" <<<"$links" ||
+        echo "wiring: $sk is not linked for $side in any family module"
+    done
+  done
+
+  while read -r side sk; do
+    [ -n "${sk:-}" ] || continue
+    case "$sk" in */*) continue ;; esac
+    [ "$side" = claude ] && root=$croot || root=$xroot
+    [ -d "$root/$sk" ] ||
+      echo "wiring: $sk is linked for $side but has no adapter directory"
+  done <<<"$links"
+}
+
+wiring=$(wiring_report "$ROOT/$CLAUDE_REL" "$ROOT/$CODEX_REL" "${WIRING_MODULES[@]}")
 if [ -z "$wiring" ]; then
-  ok "both CLIs are wired to every plan-* adapter in $(basename "$WIRING")"
+  modnames=$(for m in "${WIRING_MODULES[@]}"; do basename "$m"; done | tr '\n' ' ')
+  ok "both CLIs are wired to every adapter in ${modnames% }"
 else
   while IFS= read -r line; do bad "$line"; done <<<"$wiring"
 fi
@@ -753,7 +827,7 @@ fi
 while IFS='|' read -r s side tok why; do
   [ -n "${tok:-}" ] || continue
   hits=0
-  for sk in $(cd "$ROOT/$CLAUDE_REL" && ls -d plan-*); do
+  for sk in $(skill_set "$ROOT/$CLAUDE_REL"); do
     [ "$s" = '*' ] || [ "$s" = "$sk" ] || continue
     [ "$side" = claude ] && f="$ROOT/$CLAUDE_REL/$sk/SKILL.md" || f="$ROOT/$CODEX_REL/$sk/SKILL.md"
     [ -f "$f" ] || continue
@@ -774,7 +848,7 @@ done < <(exemptions)
 # A gate whose alternates match no adapter at all is either misspelled
 # or describes a rule that has left the family; either way it silently
 # stops enforcing anything, so it fails rather than reading green.
-live_keys=$(for sk in $(cd "$ROOT/$CLAUDE_REL" && ls -d plan-*); do
+live_keys=$(for sk in $(skill_set "$ROOT/$CLAUDE_REL"); do
   for side in "$CLAUDE_REL" "$CODEX_REL"; do
     [ -f "$ROOT/$side/$sk/SKILL.md" ] || continue
     gate_hits "$ROOT/$side/$sk/SKILL.md"
@@ -927,6 +1001,17 @@ mutate_full_step() {
     "$1/claude/plan-implement/SKILL.md"
 }
 
+# The thinking family's own controls: the coverage D5 of the plan
+# demands is only real if removing one of its adapters, or the pointer
+# that makes an adapter mean anything, fails the engine. Discovery is
+# family-agnostic, so these run through the same mutate-and-assert
+# path as the plan-family ones above.
+mutate_thinking_skill_set() { rm -rf "$1/codex/grilling"; }
+mutate_thinking_pointer() {
+  perl -0pi -e 's#~/\.config/thinking-skills/interview-me\.md#the method file#g' \
+    "$1/codex/interview-me/SKILL.md"
+}
+
 control "a step removed from one adapter" "cli:worktree open" mutate_step
 control "a skill missing for one orchestrator" "shape: skill present for claude and missing for codex: plan-sync" mutate_skill_set
 control "a description edited on one side only" "shape: plan-sync: descriptions differ" mutate_description
@@ -940,6 +1025,8 @@ control "a prerequisite deleted from inside a matched clause" "gate: plan-sync: 
 control "an unregistered fragment deleted from inside a matched clause" "unpoliced text vanished: claude/plan-create: Pause for the human [gate] , as always" mutate_partial_fragment unpoliced_report
 control "a clause deleted from the unpoliced region" "unpoliced text vanished: claude/plan-sync: Do not take the session's memory" mutate_unpoliced_delete unpoliced_report
 control "a clause added to the unpoliced region" "unpoliced text appeared: claude/plan-sync: Prefer the blue path" mutate_unpoliced_add unpoliced_report
+control "a thinking-family adapter missing for one orchestrator" "shape: skill present for claude and missing for codex: grilling" mutate_thinking_skill_set
+control "a thinking-family adapter's method pointer deleted" "gate: interview-me: claude covers 'thinking-method-file'" mutate_thinking_pointer
 
 # Layer 4's own control: a step the registry does not know about must
 # be reported, or the audit would silently bless future steps.
@@ -959,18 +1046,33 @@ else
 fi
 rm -rf "$step_tmp"
 
-# One CLI's link dropped from the module: the files stay in step, the
-# installed skill set does not.
-wiring_tmp=$(mktemp "${TMPDIR:-/tmp}/plan-skills-nix.XXXXXX")
-grep -vF '".codex/skills/plan-sync".source' "$WIRING" > "$wiring_tmp"
-wiring_out=$(wiring_report "$wiring_tmp")
-if [ -n "$wiring" ]; then
-  echo "ok - negative control skipped, the tree is already divergent: an adapter wired for one CLI only # SKIP"
-elif grep -qF "plan-sync is not linked for codex" <<<"$wiring_out"; then
-  ok "negative control caught: an adapter wired for one CLI only"
-else
-  bad "negative control NOT caught (an adapter wired for one CLI only)"
-fi
-rm -f "$wiring_tmp"
+# One CLI's link dropped from a family module: the files stay in step,
+# the installed skill set does not. Once per family, because the
+# wiring layer reads every module and a fixture proves only the module
+# it mutates: the real escape to guard against is a family whose links
+# nothing checks.
+wiring_control() { # wiring_control <desc> <expected> <module to mutate> <link line> <other module>
+  local desc=$1 want=$2 module=$3 link=$4 other=$5 tmp out
+  if [ -n "$wiring" ]; then
+    echo "ok - negative control skipped, the tree is already divergent: $desc # SKIP"
+    return
+  fi
+  tmp=$(mktemp "${TMPDIR:-/tmp}/wiring-nix.XXXXXX")
+  grep -vF "$link" "$module" > "$tmp"
+  out=$(wiring_report "$ROOT/$CLAUDE_REL" "$ROOT/$CODEX_REL" "$tmp" "$other")
+  rm -f "$tmp"
+  if grep -qF "$want" <<<"$out"; then
+    ok "negative control caught: $desc"
+  else
+    bad "negative control NOT caught ($desc); report was: ${out:-<empty>}"
+  fi
+}
+
+wiring_control "a plan-* adapter wired for one CLI only" \
+  "plan-sync is not linked for codex" \
+  "$PLAN_WIRING" '".codex/skills/plan-sync".source' "$THINKING_WIRING"
+wiring_control "a thinking-family adapter wired for one CLI only" \
+  "grilling is not linked for codex" \
+  "$THINKING_WIRING" '".codex/skills/grilling".source' "$PLAN_WIRING"
 
 exit $fail

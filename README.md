@@ -56,6 +56,7 @@ family per CLI:
 | Family | What it does | Docs |
 |--------|--------------|------|
 | `plan-*` | Plan-driven work with AI agents: create a plan through an interview and design review, implement work items, gate each through an impartial cross-LLM review loop, keep the plan docs synced. All agent-to-agent communication goes through auditable markdown. | [README](home/.config/plan-skills/README.md) |
+| `thinking` | The thinking before the work: `grilling` stress-tests a plan or decision round by round, `interview-me` extracts what an underspecified ask actually wants, `writing-for-agents` is the reference for authoring documents agents consume. Distilled from upstream skills, provenance in the family README. | [README](home/.config/thinking-skills/README.md) |
 
 New families get a row here and their own README next to their core files.
 
