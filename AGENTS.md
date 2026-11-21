@@ -25,6 +25,20 @@ Git identity is handled: `home.nix` sets `programs.git.includes` to
 `~/.gitconfig.local`, so git resolves the identity at runtime and Nix never
 reads it. Do not reintroduce `programs.git.settings.user` here.
 
+## Work in a worktree
+
+The global rule applies here and is not restated: any session that
+changes code works in its own worktree, never in
+`~/workspace/github/dotfiles`. What is specific to this repo is that
+the primary checkout is genuinely busy - several agents and the human
+read it at once - and that `plan-implement` already makes a workspace
+per plan, so plan work is covered and ordinary sessions are not.
+
+Two failures came from ignoring it, both recorded in the archived
+herdr-seat-visibility worklog: a `git reset --hard` there destroyed a
+human's uncommitted settings, and a session's commit swept another
+session's staged work into it.
+
 ## Cross-platform rule: built on one platform = installed on all
 
 A change built for one platform is wired for every supported platform
