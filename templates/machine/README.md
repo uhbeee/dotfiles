@@ -157,11 +157,46 @@ answer its questions, rename the `nixosConfigurations` output. Two ways in:
   (`nixos-generate-config --show-hardware-config`, which carries the
   filesystems disko would have owned), commit it, then apply and update
   with the standard flow - `nix flake lock` unprivileged first (the same
-  root-owned-lock hazard as darwin), then:
+  root-owned-lock hazard as darwin), then the prebuild-and-activate
+  pattern below.
 
-  ```sh
-  sudo nixos-rebuild switch --flake .#<host>
-  ```
+NixOS uses the same two-step shape as darwin: build unprivileged, then let
+root activate exactly that closure. Keep it on every switch, first install
+and update alike.
+
+```sh
+nix build .#nixosConfigurations.<host>.config.system.build.toplevel
+shasum flake.lock > /tmp/lock.sum
+sudo nix-env -p /nix/var/nix/profiles/system --set ./result
+sudo ./result/bin/switch-to-configuration switch
+readlink /run/current-system   # must print the same path as: readlink ./result
+shasum -c /tmp/lock.sum        # lock contents unchanged by root
+stat -c '%U' flake.lock        # still owned by you, not root
+```
+
+`sudo nixos-rebuild switch --flake .#<host>` is the obvious command and it
+does not work when the checkout lives in your home directory, which is the
+normal case. Root re-evaluates the flake, and nix's libgit2 refuses to open
+a repository owned by another user:
+
+```
+error: opening Git repository "/home/<you>/machines":
+       repository path is not owned by current user (libgit2 error code = 7)
+```
+
+It fails before touching the system, so the machine is never left half
+switched - but the switch does not happen. Observed on nix 2.34.8. Adding
+the checkout to root's `safe.directory` silences it; prefer the pattern
+above, which does not ask root to read your repository at all. The two
+commands are what `nixos-rebuild` itself runs once the closure is built:
+`nix-env --set` registers the generation, so rollback and the boot menu
+still work, and `switch-to-configuration` activates it.
+
+The same reasoning as darwin's `--no-update-lock-file`, arrived at from the
+other direction: root should activate a reviewed closure, never evaluate
+one. The `readlink` comparison proves it activated exactly the prebuilt
+system, and the lock checks prove root neither rewrote nor took over the
+file.
 
 Recovery is a generation rollback, no flake evaluation involved:
 `sudo nixos-rebuild switch --rollback`, or pick an older generation from
@@ -183,6 +218,16 @@ stat -f '%Su' flake.lock       # still owned by you
 # Standalone home directory:
 nix build .#homeConfigurations."<user>@<host>".activationPackage
 ./result/activate
+
+# NixOS: the prebuild-and-activate pattern from "NixOS machines" above,
+# all checks included.
+nix build .#nixosConfigurations.<host>.config.system.build.toplevel
+shasum flake.lock > /tmp/lock.sum
+sudo nix-env -p /nix/var/nix/profiles/system --set ./result
+sudo ./result/bin/switch-to-configuration switch
+readlink /run/current-system   # matches readlink ./result
+shasum -c /tmp/lock.sum        # lock contents unchanged by root
+stat -c '%U' flake.lock        # still owned by you
 ```
 
 On a Linux machine updating across the default-browser change, home-manager

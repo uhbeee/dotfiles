@@ -89,8 +89,13 @@
       # inside it. The host is a directory module (machines/example-nixos/),
       # not a question-file: a NixOS host also answers hardware and disk
       # questions, which no attrset covers. Scaffold a real machine by
-      # copying the directory and renaming this output. Apply on the machine:
-      #   sudo nixos-rebuild switch --flake .#example-nixos
+      # copying the directory and renaming this output. Apply on the machine
+      # with the prebuild-and-activate pattern in the README - not
+      # `nixos-rebuild switch --flake`, which fails when root cannot read a
+      # checkout you own:
+      #   nix build .#nixosConfigurations.example-nixos.config.system.build.toplevel
+      #   sudo nix-env -p /nix/var/nix/profiles/system --set ./result
+      #   sudo ./result/bin/switch-to-configuration switch
       nixosConfigurations.example-nixos = nixpkgs.lib.nixosSystem {
         # Lets the host module import the library's home module for its user.
         specialArgs = { inherit dotfiles; };
