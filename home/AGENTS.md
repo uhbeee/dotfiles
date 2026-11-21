@@ -16,6 +16,21 @@
 - Apply that same high standard to engineering excellence: lint, test failures, and test flakiness.
   If you see one, even if it is not caused by what you are working on right now, still get it fixed.
 - Before using "dynamic workflows", "ultra code" or any harness feature that immediately spawns a large swarm of subagents, always explain the tradeoffs and ask the user for explicit approval.
+- ALWAYS work in a dedicated git worktree when changing code. Never edit, stage, commit
+  or switch branches in a shared primary checkout - other agents and I read it at once,
+  so committing there sweeps up whatever anyone else has staged and switching branches
+  moves `HEAD` under them mid-edit. Make one before the first write:
+  `git worktree add -b work/<slug> /tmp/<slug> origin/<default-branch>`, or inside herdr
+  `herdr worktree create --branch work/<slug>`. Nothing enforces this for you: a plan's
+  skills create a workspace, but an ordinary session does not, and herdr's own skill
+  tells you to stay in your current directory unless asked. Read-only work is exempt.
+  Before any git write in a checkout you did not create, read `git status` and the
+  current branch first.
+- The worktree holds the code; plan documents do not move with it. A plan directory is
+  gitignored, so it exists only in the primary checkout and a fresh worktree has none -
+  read and write it by absolute path, never relative to your cwd. A codex seat needs
+  `-c sandbox_workspace_write.writable_roots=["<abs plan docs dir>"]` to write there,
+  since `workspace-write` otherwise confines it to its own tree; reads are unrestricted.
 - Never do `git commit` or `git push` operations without checking with me first and getting permission.
 - When you introduce a new term or concept or acronym for the first time in a session make sure you explain it the first time. At least in a simple paranthetitcal alongside the first occurence of the item.
 - Be as pithy as possible in your responses. Never re-iterate or re-explain or re-say anything already said. ALWAYS err towards being as pithy as possible.
