@@ -1,3 +1,20 @@
+claude/grilling: [gate] , this adapter only assigns the role and the asking conventions
+claude/grilling: a frontier round goes out as one plain-text message of numbered questions, each with its recommendation on its own line, exactly the round format the method shows
+claude/grilling: a wider frontier goes out as the plain-text round rather than being trimmed to fit the tool
+claude/grilling: Asking in claude code
+claude/grilling: AskUserQuestion carries at most four questions and has no per-question recommendation line, so it suits only a frontier that already fits in four whose answers are concrete options, with the recommendation marked as the recommended one
+claude/grilling: Either way, wait for the answers before recomputing the frontier
+claude/grilling: Read ~/. [gate] now and follow it exactly
+claude/grilling: The subject is the human's to name - which plan, decision or idea is on the table, and where it is written down - so ask for it [gate] ing from the surrounding session
+claude/grilling: You are the interviewer
+claude/interview-me: [gate] , this adapter only assigns the role and the asking conventions
+claude/interview-me: a question whose answer really is a choice between two concrete options can use it for that one question's options, guess marked as the recommended one
+claude/interview-me: Asking in claude code
+claude/interview-me: AskUserQuestion is built to batch up to four questions and has nowhere to put the guess, so it is not the route here
+claude/interview-me: each question is one plain-text message in the method's two-line shape, the question and your guess beneath it, and you wait for the reaction before the next one
+claude/interview-me: Read ~/. [gate] now and follow it exactly
+claude/interview-me: The six-field restatement and the explicit yes are plain text too, one line per field so the human can correct it line by line
+claude/interview-me: You are the interviewer
 claude/plan-archive: - archive repo
 claude/plan-archive: - plan directory
 claude/plan-archive: [gate] - and [gate] is complete before touching the source
@@ -206,6 +223,45 @@ claude/plan-sync: update [gate] that got answered and any current state the plan
 claude/plan-sync: When both hold, [gate] that the plan is finished, that every [gate] and that [gate] - the hazard worktree remove poses is a [gate] , and herdr [gate] --pane <pane-id> over the panes herdr pane list --workspace <workspace-id> returns is the check - and that the [gate] , then herdr worktree remove --workspace <workspace-id>
 claude/plan-sync: Workspace, for a plan with a worktree workspace
 claude/plan-sync: You are the orchestrator
+claude/writing-for-agents: [gate] , this adapter only assigns the role and says which file to reach for
+claude/writing-for-agents: it is disclosed reference, and loading it for a document that is not a skill is the failure the reference itself warns about
+claude/writing-for-agents: It is reference rather than a sequence, so read it whole before drafting and consult it again while pruning - the levers it names (pointer wording, the two loads, the hierarchy, completion criteria, leading words) are what the draft is judged against
+claude/writing-for-agents: Read ~/. [gate] now and apply it
+claude/writing-for-agents: Read that one then, and only then
+claude/writing-for-agents: Where the document being written is a skill, its frontmatter, invocation and router mechanics live in the companion file ~/. [gate]
+claude/writing-for-agents: You are the author of a document an agent will consume
+codex/grilling: [gate] , this adapter only assigns the role and the asking conventions
+codex/grilling: A chunk, and a plain-text question just as much, is a presentation of the live frontier rather than a fixed queue
+codex/grilling: Answering one yourself is the defect the method names, however reasonable the answer
+codex/grilling: Asking in codex
+codex/grilling: Grill the plan, decision or idea named in the user's request
+codex/grilling: If the user stays in Default mode, its rules apply instead
+codex/grilling: its collaboration-mode rules come first, and a skill does not override them, and only the user switches between them (Shift+Tab) - you cannot, and must not claim to
+codex/grilling: Read ~/. [gate] now and follow it exactly
+codex/grilling: recompute the frontier after every answer, so frontier decisions still outstanding carry into the next ask and an answer that invalidates a pending question drops or replaces it instead of being asked anyway
+codex/grilling: Say that this trades the method's round compression for the mode, so the user can choose which they want
+codex/grilling: say you need Plan mode and wait before the first round
+codex/grilling: the decisions are the user's
+codex/grilling: the picker is only for optional questions whose answer would materially improve the work, an empty return means carry on with your best judgment rather than ask again, and a frontier decision is never that kind of question - so ask the frontier out one question at a time as concise plain text and wait for each answer, never writing multiple choices into a message or routing a required decision through the picker
+codex/grilling: The round ends only once the frontier as recomputed is empty
+codex/grilling: The subject is the user's to name - which plan, decision or idea is on the table, and where it is written down - so ask for it [gate] ing from the surrounding session
+codex/grilling: There each call carries one to three questions, every question with concrete options and your recommendation marked, so a frontier wider than three is presented in chunks of at most three
+codex/grilling: This skill is nothing but an interview and writes no files, so it belongs in Plan mode, where request_user_input is the preferred route for any question and codex itself biases toward asking over guessing
+codex/grilling: What no mode changes
+codex/grilling: You are the interviewer
+codex/interview-me: [gate] , this adapter only assigns the role and the asking conventions
+codex/interview-me: Asking in codex
+codex/interview-me: Either way the answers are the user's, and a reply that is not an answer is handled by the method's own rules for one rather than filled in by you
+codex/interview-me: If the user stays in Default mode, its rules apply instead
+codex/interview-me: Interview the user about the ask in their request until you know what they actually want
+codex/interview-me: its collaboration-mode rules come first, and a skill does not override them, and only the user switches between them (Shift+Tab) - you cannot, and must not claim to
+codex/interview-me: Read ~/. [gate] now and follow it exactly
+codex/interview-me: say you need Plan mode and wait before the first question
+codex/interview-me: the picker is only for optional questions whose answer would materially improve the work, an empty return means carry on with your best judgment rather than ask again, and nothing this method asks is that kind of question - so ask each question as concise plain text in the same two-line shape and wait for the reaction, never writing multiple choices into a message or routing a question the method requires through the picker
+codex/interview-me: The six-field restatement and the explicit yes are plain text, one line per field so the user can correct it line by line
+codex/interview-me: There each call carries one question rather than the three it allows, in the method's two-line shape - the question, and your guess at the answer beneath it - with the guess marked as the recommended option wherever the answer is a choice between concrete options
+codex/interview-me: This skill is nothing but an interview and writes no files, so it belongs in Plan mode, where request_user_input is the preferred route for any question and codex itself biases toward asking over guessing
+codex/interview-me: You are the interviewer
 codex/plan-archive: [gate] is the user's call, [gate] [decision] worklog entry)
 codex/plan-archive: an explicit argument overrides it
 codex/plan-archive: Anything you actually need before you can continue is not that kind of question
@@ -392,3 +448,16 @@ codex/plan-sync: What no mode changes
 codex/plan-sync: When both hold, [gate] that the plan is finished, that every [gate] and that [gate] - the hazard worktree remove poses is a [gate] , and herdr [gate] --pane <pane-id> over the panes herdr pane list --workspace <workspace-id> returns is the check - and that the [gate] , then herdr worktree remove --workspace <workspace-id>
 codex/plan-sync: You are the orchestrator
 codex/plan-sync: You need from the arguments or the user
+codex/writing-for-agents: [gate] , this adapter only assigns the role and says which file to reach for
+codex/writing-for-agents: ask for it as one concise plain-text question when the request leaves it open
+codex/writing-for-agents: Asking in codex
+codex/writing-for-agents: it is disclosed reference, and loading it for a document that is not a skill is the failure the reference itself warns about
+codex/writing-for-agents: It is reference rather than a sequence, so read it whole before drafting and consult it again while pruning - the levers it names (pointer wording, the two loads, the hierarchy, completion criteria, leading words) are what the draft is judged against
+codex/writing-for-agents: its collaboration-mode rules come first, and a skill does not override them
+codex/writing-for-agents: Read ~/. [gate] now and apply it
+codex/writing-for-agents: Read that one then, and only then
+codex/writing-for-agents: Revising a document writes files, so this runs in Default mode, where request_user_input is for optional questions whose answer would materially improve the work and an empty return means carry on with your best judgment rather than ask again
+codex/writing-for-agents: What the document is for, and who consumes it, is the user's to say rather than yours to assume
+codex/writing-for-agents: Where the document being written is a skill, its frontmatter, invocation and router mechanics live in the companion file ~/. [gate]
+codex/writing-for-agents: Write or revise the agent-facing document named in the user's request against this reference
+codex/writing-for-agents: You are the author of a document an agent will consume

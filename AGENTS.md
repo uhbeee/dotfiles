@@ -36,19 +36,27 @@ synthetic user-agnostic home closure per supported system, so run
 natively on a box of that architecture (the Mac for aarch64-darwin, the
 WSL box for x86_64-linux).
 
-## plan-* skills: one protocol, two adapters
+## Skill families: the method lives once, the adapters stay thin
 
-The plan-* behavior lives once, in `home/.config/plan-skills/`
-(PROTOCOL.md, ROLES.md, ARTIFACTS.md). `home/.claude/skills/plan-*` and
-`home/.codex/skills/plan-*` are thin per-CLI adapters over it, and a step,
-gate or lifecycle in one adapter and not its counterpart is a defect in
-the one that lacks it. Touch one, touch both, or move the behavior into
-the protocol: `tests/adapter-parity.test.sh` fails on divergence and its
-header explains what it compares and how a legitimate per-CLI difference
-is registered. It also freezes the remainder of each adapter clause that
-no check covers in `tests/adapter-parity-unpoliced.txt`, so an edit there
-fails until you either register the rule or confirm the counterpart
-adapter carries the same change and regenerate with
+Two families ship, both built the same way: the behavior lives once in
+a family home under `home/.config/`, and `home/.claude/skills/<name>`
+plus `home/.codex/skills/<name>` are thin per-CLI adapters over it. The
+plan-* behavior is `home/.config/plan-skills/` (PROTOCOL.md, ROLES.md,
+ARTIFACTS.md); the thinking family - `grilling`, `interview-me`,
+`writing-for-agents` - is `home/.config/thinking-skills/`, one method
+file per skill and no shared protocol, since the three share none. A
+step, gate or lifecycle in one adapter and not its counterpart is a
+defect in the one that lacks it, in either family. Touch one, touch
+both, or move the behavior into the method file:
+`tests/adapter-parity.test.sh` fails on divergence and its header
+explains what it compares and how a legitimate per-CLI difference is
+registered. It discovers adapters from the tree rather than from a
+family prefix and reads every `modules/home/common/*-skills.nix` for
+the links, so a new family is covered the moment its adapters and its
+module exist. It also freezes the remainder of each adapter clause that
+no check covers in `tests/adapter-parity-unpoliced.txt`, so an edit
+there fails until you either register the rule or confirm the
+counterpart adapter carries the same change and regenerate with
 `UPDATE_UNPOLICED=1 bash tests/adapter-parity.test.sh`.
 
 ## Other deliberate decisions - do NOT silently revert them

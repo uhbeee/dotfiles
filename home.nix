@@ -36,6 +36,7 @@
     ./modules/home/common/lazy-pins.nix
     ./modules/home/common/agents.nix
     ./modules/home/common/plan-skills.nix
+    ./modules/home/common/thinking-skills.nix
     ./modules/home/common/pi.nix
     ./modules/home/common/agent-clis.nix
     ./modules/home/common/claude.nix
